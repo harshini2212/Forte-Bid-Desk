@@ -1,0 +1,7 @@
+# Forte Bid Desk: FastAPI UI + streaming SSE API + the two-tier scope resolver.
+# Pure-Python engine. Claude (anthropic) is optional and lazy: the whole demo runs
+# offline on committed cache + the deterministic teacher.
+fastapi>=0.110
+uvicorn[standard]>=0.27
+anthropic>=0.40        # frontier teacher (Claude); imported lazily
+fastembed>=0.3         # distilled MiniLM (BERT) embeddings for the local student tier (ONNX, no torch)

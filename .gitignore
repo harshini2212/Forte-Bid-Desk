@@ -1,0 +1,23 @@
+# Secrets — never commit
+.env
+*.env
+!.env.example
+credentials*
+
+# LLM response cache + the agent's local "project system" writes (regenerable)
+.cache/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+.venv/
+venv/
+
+# editor / tool config
+.claude/
+.vscode/
+.idea/

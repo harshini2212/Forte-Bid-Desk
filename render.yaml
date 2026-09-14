@@ -1,0 +1,18 @@
+# Render blueprint for the Forte Bid Desk.
+# Deploy: push to GitHub -> render.com -> point at this repo. Runs fully offline on
+# committed cache; set ANTHROPIC_API_KEY only if you want the live Claude teacher.
+services:
+  - type: web
+    name: forte-bid-desk
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt && python serve.py --precompute
+    startCommand: python serve.py
+    healthCheckPath: /api/health
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false           # optional live teacher; set in the dashboard, never committed
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: RUN_PACE
+        value: "0.28"         # drip the SSE stream so the hosted demo feels live

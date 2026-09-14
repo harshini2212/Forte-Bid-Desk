@@ -1,0 +1,13 @@
+.git/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.cache/
+.venv/
+venv/
+*.env
+credentials*
+.claude/
+docs/
+# keep data/ — cached estimates + routing metrics are served at runtime

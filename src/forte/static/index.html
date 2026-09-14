@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Forte Bid Desk · an AI estimator that executes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+    --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+    --bg:#f3f2ef;--panel:#fff;--panel2:#f5f4f1;--panel3:#ecebe7;
+    --line:#e9e7e2;--line2:#f1efec;--hair:#eeece7;
+    --ink:#191919;--ink2:#40403f;--muted:#71717a;--faint:#a3a29c;
+    --pri:#18181b;--pri2:#0a0a0a;
+    --brex:#2f6bff;--brex2:#1f56e0;--brexbg:#eef3ff;--brexbd:#d7e4ff;
+    --ai:#2f6bff;--ai2:#1d4ed8;--aibg:#eef3ff;--aibd:#cfe0ff;
+    --green:#16a34a;--greenbg:#e8f8ef;--amber:#d97706;--amberbg:#fdf3e3;--red:#e11d48;--redbg:#fdeaef;--crit:#be123c;
+    --blue:#3b82f6;--bluebg:#eaf1ff;--pink:#ec4899;--pinkbg:#fdeef6;
+    --peach:linear-gradient(135deg,#ffd0a3 0%,#ff9f7d 46%,#c6a2fb 100%);
+    --r1:9px;--r2:14px;--r3:18px;
+    --sh1:0 1px 2px rgba(40,34,28,.05),0 1px 3px rgba(40,34,28,.035);
+    --sh2:0 14px 38px rgba(40,34,28,.11),0 3px 9px rgba(40,34,28,.05);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 var(--sans);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+  a{color:var(--brex2);text-decoration:none}
+  ::selection{background:#ffe0cf}
+  .app{min-height:100vh;display:flex}
+  /* ---------- left sidebar ---------- */
+  .sidebar{width:230px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--hair);
+    display:flex;flex-direction:column;gap:3px;padding:15px 13px 14px;position:sticky;top:0;height:100vh;overflow:auto;z-index:14}
+  .sidebar::-webkit-scrollbar{width:0}
+  .brand{display:flex;align-items:center;gap:10px;padding:4px 6px 12px}
+  .logo{width:32px;height:32px;border-radius:10px;background:var(--pri);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px}
+  .brand .nm{font-weight:700;font-size:17px;letter-spacing:-.4px}
+  .nav{display:flex;flex-direction:column;align-items:stretch;gap:2px;min-width:0}
+  .nav .grp{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--faint);font-weight:700;padding:13px 8px 5px}
+  .nav a{display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:10px;font-size:13.5px;font-weight:500;
+    cursor:pointer;color:var(--ink2);white-space:nowrap}
+  .nav a svg{width:17px;height:17px;flex-shrink:0;color:var(--faint)}
+  .nav a:hover{background:var(--panel2);color:var(--ink)}
+  .nav a.on{background:var(--pri);color:#fff;font-weight:600}
+  .nav a.on svg{color:#fff}
+  .nav a .cnt{margin-left:auto;font-size:10px;font-weight:700;background:var(--red);color:#fff;padding:0 6px;border-radius:20px}
+  .sidefoot{margin-top:auto;padding-top:13px;border-top:1px solid var(--hair);display:flex;flex-direction:column;gap:8px}
+  .sideuser{display:flex;align-items:center;gap:9px}
+  .sideuser select{flex:1;min-width:0}
+  .avatar{width:34px;height:34px;border-radius:50%;background:var(--peach);display:flex;align-items:center;justify-content:center;color:#5b2b12;font-weight:700;font-size:12.5px;flex-shrink:0}
+  .live{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px #d7f0e0}
+  .mainwrap{flex:1;min-width:0;display:flex;flex-direction:column}
+  .topbar{display:flex;align-items:center;gap:10px;padding:11px 26px;background:var(--panel);border-bottom:1px solid var(--hair);position:sticky;top:0;z-index:12}
+  .topbar .sp{flex:1;min-width:6px}
+  main{flex:1;min-width:0}
+  /* ---------- Forte AI ask block ---------- */
+  .aiask{margin-top:14px;background:linear-gradient(160deg,#fff 40%,#f1f6ff);border:1px solid var(--aibd);border-radius:14px;padding:13px 14px}
+  .aiask-h{display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:700;letter-spacing:-.2px}
+  .aiask-h .aidiamond{color:var(--ai);font-size:15px}
+  .aiask-tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--ai);background:var(--aibg);border:1px solid var(--aibd);border-radius:20px;padding:1px 7px}
+  .aiask-sub{font-size:12px;color:var(--muted);margin:4px 0 10px;line-height:1.45}
+  .askchips{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+  .askchips span{font-size:11.5px;font-weight:500;color:var(--ink2);background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:5px 11px;cursor:pointer;transition:.13s}
+  .askchips span:hover{border-color:var(--ai);color:var(--ai);background:var(--aibg)}
+  .cosearch{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel);border-radius:11px;padding:4px 5px 4px 10px;min-width:300px;box-shadow:var(--sh1)}
+  .cosearch svg{width:15px;height:15px;color:var(--faint);flex:none}
+  .cosearch input{border:none;background:transparent;outline:none;flex:1;min-width:0;font-size:12.5px;color:var(--ink);padding:4px 0}
+  .cosearch-wrap{position:relative;min-width:300px}
+  .typeahead{position:absolute;top:calc(100% + 5px);left:0;right:0;background:var(--panel);border:1px solid var(--line);border-radius:11px;box-shadow:0 12px 32px rgba(40,34,28,.15);z-index:40;overflow:hidden;max-height:300px;overflow-y:auto}
+  .ta-item{display:flex;align-items:center;gap:10px;padding:9px 12px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--line)}
+  .ta-item:last-child{border-bottom:none}
+  .ta-item:hover{background:var(--brexbg)}
+  .ta-item .sr-tk{font-weight:700;font-size:11.5px;color:var(--brex);min-width:54px}
+  .cobanner{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:11px 14px;margin-bottom:16px;box-shadow:var(--sh1);flex-wrap:wrap}
+  .agentsteps{display:flex;flex-direction:column;gap:8px}
+  .astep{border:1px solid var(--line);border-radius:11px;padding:10px 12px;background:var(--panel)}
+  .astep-h{display:flex;align-items:center;gap:9px;font-size:13px;margin-bottom:5px}
+  .astep-n{width:20px;height:20px;border-radius:50%;background:var(--pri);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+  @media(max-width:820px){.sidebar{width:74px;padding:14px 10px}.brand .nm,.nav .grp,.nav a span,.sideuser select{display:none}.nav a{justify-content:center;gap:0;padding:9px 0}.sideuser{justify-content:center}}
+  /* page header row (big title + controls) */
+  .pghead{display:flex;align-items:center;gap:14px;padding:22px 26px 4px;max-width:1320px;margin:0 auto;flex-wrap:wrap}
+  .pghead .tt{min-width:0}
+  .pghead .ttl{font-size:30px;font-weight:700;letter-spacing:-.9px;line-height:1.04}
+  .pghead .sub{font-size:13px;color:var(--muted);margin-top:3px}
+  .pghead .sp{flex:1;min-width:6px}
+  .pill{display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border:1px solid var(--line);border-radius:12px;background:var(--panel);font-size:13px;font-weight:500;color:var(--ink2);cursor:pointer}
+  .pill svg{width:15px;height:15px}
+  .search{display:flex;align-items:center;gap:8px;flex:0 1 210px;min-width:44px;padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);color:var(--muted);cursor:text;font-size:13px;overflow:hidden}
+  .search>span:not(.kbd){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .search svg{width:15px;height:15px}
+  .search .kbd{margin-left:auto;font-size:11px;border:1px solid var(--line);border-radius:6px;padding:1px 5px;background:#fff;color:var(--faint);font-family:var(--mono)}
+  select,input,button,textarea{font:inherit}
+  select,input.t{padding:8px 11px;border:1px solid var(--line);border-radius:11px;background:var(--panel);color:var(--ink)}
+  button{cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:8px 14px;border-radius:12px;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:6px;transition:.14s}
+  button svg{width:15px;height:15px}
+  button.primary{background:var(--pri);color:#fff;border-color:var(--pri)}
+  button.ai{background:var(--brex);color:#fff;border-color:var(--brex)}
+  button.sm{padding:6px 10px;font-size:12px;font-weight:600;border-radius:10px}
+  button.ghost{background:transparent;border-color:transparent}
+  button:hover{filter:brightness(.985)}button.primary:hover,button.ai:hover{filter:brightness(1.14)}button:active{transform:translateY(.5px)}
+  button:disabled{opacity:.55;cursor:default}
+  .iconbtn{position:relative;width:38px;height:38px;padding:0;justify-content:center;border-radius:11px}
+  .iconbtn:hover{background:var(--panel2)}
+  .iconbtn .badge{position:absolute;top:-3px;right:-3px;background:var(--red);color:#fff;font-size:10px;font-weight:700;border-radius:20px;min-width:16px;height:16px;display:flex;align-items:center;justify-content:center;padding:0 4px}
+  .cost{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .page{padding:14px 26px 44px;max-width:1320px;margin:0 auto}
+  h1.pt{font-size:22px;font-weight:700;letter-spacing:-.6px;margin:0}
+  h2{font-size:11.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin:24px 0 11px;font-weight:600;display:flex;align-items:center;gap:8px}
+  h1 svg,h2 svg,h3 svg{width:16px;height:16px;flex:none}
+  h3{font-size:14px;font-weight:600;margin:0 0 8px}
+  .lede{color:var(--muted);margin:0 0 14px;font-size:13.5px}
+  .lede b{color:var(--ink)}
+  .muted{color:var(--muted)}.green{color:var(--green)}.red{color:var(--red)}
+  /* ---------- stat cards ---------- */
+  .strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:13px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--r2);padding:14px 15px;box-shadow:var(--sh1)}
+  .stat .k{font-size:11.5px;color:var(--muted);font-weight:500}
+  .stat .vrow{display:flex;align-items:flex-end;justify-content:space-between;gap:6px;margin-top:7px}
+  .stat .v{font-size:25px;font-weight:700;letter-spacing:-.6px;line-height:1}
+  .stat .s{font-size:12px;color:var(--muted);margin-top:8px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .stat.ai{background:linear-gradient(155deg,#fff 30%,var(--aibg));border-color:var(--aibd)}
+  .delta{font-weight:600;display:inline-flex;align-items:center;gap:2px;font-variant-numeric:tabular-nums}
+  .delta.up{color:var(--green)}.delta.down{color:var(--red)}
+  .pillbadge{font-size:11px;font-weight:600;padding:1px 8px;border-radius:20px;background:var(--panel2);color:var(--muted)}
+  .pill-healthy{background:var(--greenbg);color:var(--green)}.pill-watch{background:var(--amberbg);color:var(--amber)}.pill-critical{background:var(--redbg);color:var(--crit)}
+  /* ---------- cards / layout ---------- */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r3);padding:16px 18px;box-shadow:var(--sh1)}
+  .card .ch{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+  .card .ch h3{margin:0}.card .ch .sp{flex:1}
+  .row{display:grid;gap:16px}
+  .g2{grid-template-columns:1.55fr 1fr}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  @media(max-width:960px){.g2,.g3{grid-template-columns:1fr}}
+  /* ---------- AI + insights ---------- */
+  .aidiamond{color:var(--ai)}
+  .aipill{display:inline-flex;gap:4px;align-items:center;background:var(--aibg);color:var(--ai2);border:1px solid var(--aibd);border-radius:20px;padding:1px 9px;font-size:10.5px;font-weight:600;letter-spacing:.2px;text-transform:none}
+  .insights{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:820px){.insights{grid-template-columns:1fr}}
+  .insight{display:flex;gap:12px;padding:13px 15px;border:1px solid var(--line);border-radius:var(--r2);background:var(--panel);box-shadow:var(--sh1);align-items:flex-start}
+  .insight .ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .insight .ic svg{width:17px;height:17px}
+  .ic-critical{background:var(--redbg);color:var(--crit)}.ic-high{background:var(--redbg);color:var(--red)}
+  .ic-medium{background:var(--amberbg);color:var(--amber)}.ic-low{background:var(--aibg);color:var(--ai2)}
+  .insight .bd{flex:1;min-width:0}
+  .insight .t{font-weight:600;font-size:13.5px;line-height:1.35}
+  .insight .amt{color:var(--brex2)}
+  .insight .d{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .insight .act{margin-top:9px}
+  .askbar{display:flex;gap:8px;align-items:center;background:var(--panel);border:1px solid var(--line);box-shadow:var(--sh1);border-radius:12px;padding:8px 8px 8px 14px}
+  .askbar input{flex:1;border:none;background:transparent;outline:none;font-size:14px;min-width:0}
+  .chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+  .chip{font-size:12px;padding:5px 11px;border:1px solid var(--line);border-radius:20px;background:var(--panel);cursor:pointer;color:var(--ink2)}
+  .chip:hover{border-color:var(--ai);color:var(--ai2)}
+  /* ---------- tables / grid ---------- */
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:9px 11px;border-bottom:1px solid var(--line2);text-align:left;white-space:nowrap}
+  th{color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;font-weight:600;position:sticky;top:0;background:var(--panel)}
+  td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+  tbody tr:hover{background:var(--panel2)}tbody tr.click{cursor:pointer}
+  td.wrap{white-space:normal}
+  .tablewrap{background:var(--panel);border:1px solid var(--line);border-radius:var(--r3);overflow:auto;max-height:64vh;box-shadow:var(--sh1)}
+  .tbar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .tbar .ct{font-size:12.5px;color:var(--muted)}.tbar .sp{flex:1}
+  th.sortable{cursor:pointer;user-select:none}th.sortable:hover{color:var(--brex)}
+  th .arr{color:var(--brex);font-size:10px}
+  .rb{padding:1px 8px;border-radius:20px;font-size:11px;font-weight:600;display:inline-block}
+  .rb-critical{background:var(--redbg);color:var(--crit)}.rb-high{background:var(--redbg);color:var(--red)}
+  .rb-medium{background:var(--amberbg);color:var(--amber)}.rb-low{background:var(--greenbg);color:var(--green)}
+  .rb-blue{background:var(--bluebg);color:var(--blue)}.rb-pink{background:var(--pinkbg);color:var(--pink)}.rb-gray{background:var(--panel2);color:var(--muted)}
+  .tag{padding:1px 8px;border-radius:7px;font-size:11px;background:var(--panel2);color:var(--muted)}
+  .flagpill{padding:1px 7px;border-radius:7px;font-size:10.5px;background:var(--amberbg);color:var(--amber);margin-right:3px}
+  .filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+  .filters label{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:5px}
+  .mono{font-family:var(--mono);font-size:12px}
+  /* ---------- bars / hbars / progress ---------- */
+  .hbars .hbar{display:grid;grid-template-columns:130px 1fr 74px;gap:10px;align-items:center;margin:7px 0;font-size:13px}
+  .hbars .hl{color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .hbars .ht{background:var(--panel2);border-radius:6px;overflow:hidden;height:9px}
+  .hbars .ht i{display:block;height:9px;border-radius:6px}
+  .hbars .hv{text-align:right;color:var(--ink2)}
+  .prog{height:9px;border-radius:6px;background:var(--panel2);overflow:hidden}
+  .prog>i{display:block;height:100%;border-radius:6px;background:var(--brex);transition:width .3s}
+  .prog.warn>i{background:var(--amber)}.prog.over>i{background:var(--red)}
+  .dleg{display:flex;align-items:center;gap:7px;font-size:12.5px;margin:4px 0}
+  .dleg i{width:9px;height:9px;border-radius:3px;flex-shrink:0}
+  /* ---------- charts ---------- */
+  .chart2{width:100%;height:auto;display:block;overflow:visible}
+  .axl{fill:var(--faint);font-size:11px;font-weight:500}
+  .spark{display:block}
+  .legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-top:8px;flex-wrap:wrap}
+  .legend i{display:inline-block;width:16px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+  .proof{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0}
+  .proof .p{border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .proof .pl{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+  .proof .pv{font-size:20px;font-weight:700;margin-top:3px}
+  /* ---------- kpis ---------- */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+  .kpi2{background:var(--panel);border:1px solid var(--line);border-radius:var(--r2);padding:13px 15px;box-shadow:var(--sh1)}
+  .kpi2 .k{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
+  .kpi2 .v{font-size:22px;font-weight:700;margin-top:4px;letter-spacing:-.4px}
+  .kpi2 .s{font-size:12px;color:var(--muted);margin-top:2px}
+  .hero.kpi2{background:linear-gradient(150deg,#fff,var(--brexbg));border-color:var(--brexbd)}.hero .v{color:var(--brex)}
+  .kpi2.danger .v{color:var(--red)}.kpi2.good .v{color:var(--green)}
+  /* ---------- skeleton ---------- */
+  .sk{background:linear-gradient(90deg,var(--panel2) 25%,var(--panel3) 37%,var(--panel2) 63%);background-size:400% 100%;animation:sh 1.3s ease infinite;border-radius:9px}
+  @keyframes sh{0%{background-position:100% 0}100%{background-position:-100% 0}}
+  .skgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:13px}
+  .spin{color:var(--muted);font-style:italic;padding:14px 2px}
+  .empty{text-align:center;color:var(--muted);padding:34px 18px;border:1px dashed var(--line);border-radius:var(--r3)}
+  .empty .eh{font-weight:600;color:var(--ink);font-size:14px;margin-bottom:4px}
+  /* ---------- AI drawer ---------- */
+  .ai{position:fixed;top:0;right:0;width:440px;max-width:94vw;height:100vh;background:var(--panel);
+    border-left:1px solid var(--line);box-shadow:-10px 0 34px rgba(16,24,40,.10);transform:translateX(100%);
+    transition:.22s cubic-bezier(.4,0,.2,1);z-index:24;display:flex;flex-direction:column}
+  .ai.open{transform:none}
+  .ai .h{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid var(--line);background:linear-gradient(120deg,var(--aibg),#fff)}
+  .ai .h b{color:var(--ai2)} .ai .h .x{margin-left:auto;cursor:pointer;color:var(--muted);font-size:18px}
+  .ai .body{flex:1;overflow:auto;padding:14px 16px}
+  .ai .starter{display:flex;gap:8px;margin-bottom:10px}
+  .ai textarea{flex:1;min-height:44px;padding:10px 11px;border:1px solid var(--line);border-radius:9px;resize:vertical}
+  .answer{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:14px;margin:8px 0}
+  .fcard{border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-bottom:10px}
+  .fcard .ft{font-size:11px;font-weight:600;color:var(--ai2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;display:flex;align-items:center;gap:5px}
+  .verified{color:var(--green);font-weight:600}.notver{color:var(--red);font-weight:600}
+  .trace{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
+  .trace .hh{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);cursor:pointer}
+  .step{font-size:11.5px;color:var(--muted);font-family:var(--mono)}.step b{color:var(--ai2)}
+  /* ---------- modal + palette ---------- */
+  .modal{position:fixed;inset:0;background:rgba(16,20,28,.42);display:flex;align-items:center;justify-content:center;z-index:30;padding:20px}
+  .modal .box{background:var(--panel);border-radius:var(--r3);max-width:580px;width:100%;max-height:86vh;overflow:auto;padding:20px 22px;box-shadow:var(--sh2)}
+  .emailhdr{border:1px solid var(--line);border-radius:10px;padding:10px 13px;font-size:13px;background:var(--panel2)}
+  .emailhdr>div{margin:2px 0}
+  .emailhdr .el{display:inline-block;width:58px;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+  .emailbody{white-space:pre-wrap;font:12.5px/1.55 var(--mono);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:0;max-height:38vh;overflow:auto;color:var(--ink2)}
+  .cmdk{position:fixed;inset:0;background:rgba(16,20,28,.4);z-index:40;display:none;align-items:flex-start;justify-content:center;padding-top:12vh}
+  .cmdk.open{display:flex}
+  .cmdbox{width:min(620px,92vw);background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--sh2);overflow:hidden}
+  .cmdbox>input{width:100%;border:none;padding:15px 18px;font-size:15.5px;outline:none;background:transparent}
+  .cmdlist{max-height:52vh;overflow:auto;border-top:1px solid var(--line2);padding:6px}
+  .cmdgrp{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--faint);font-weight:600;padding:9px 12px 4px}
+  .cmditem{display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;font-size:13.5px;border-radius:8px}
+  .cmditem svg{width:16px;height:16px;color:var(--muted)}
+  .cmditem .cs{margin-left:auto;font-size:11.5px;color:var(--faint)}
+  .cmditem.sel{background:var(--brexbg);color:var(--brex2)}.cmditem.sel svg{color:var(--brex)}
+  .menu{position:absolute;background:var(--panel);border:1px solid var(--line);border-radius:11px;box-shadow:var(--sh2);padding:6px;z-index:26;min-width:190px}
+  .menu button{width:100%;justify-content:flex-start;border:none;background:transparent;font-weight:500;font-size:13px;padding:8px 10px}
+  .menu button:hover{background:var(--panel2)}
+  .backbtn{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);cursor:pointer;margin-bottom:14px;font-weight:500}
+  .backbtn:hover{color:var(--brex)}
+  .co-hd{display:flex;align-items:center;gap:14px}
+  .co-logo{width:48px;height:48px;border-radius:12px;background:var(--brexbg);color:var(--brex2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px;flex-shrink:0}
+  .brief{background:linear-gradient(120deg,var(--aibg),#fff);border:1px solid var(--aibd);border-radius:14px;padding:15px 17px}
+  .brief .bt{white-space:pre-wrap;font-size:13.5px;line-height:1.6;color:var(--ink)}
+  /* ---------- signature components (peach card, bignum, waffle, progress rows) ---------- */
+  .peachcard{border-radius:18px;padding:20px 22px;color:#fff;background:var(--peach);position:relative;overflow:hidden;box-shadow:var(--sh1);display:flex;flex-direction:column;justify-content:flex-end;min-height:220px}
+  .peachcard .lab{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;opacity:.92;display:inline-flex;align-items:center;gap:6px;align-self:flex-start;background:rgba(255,255,255,.22);padding:3px 10px;border-radius:20px}
+  .peachcard .big{font-size:46px;font-weight:700;letter-spacing:-1.6px;line-height:1;margin-top:auto}
+  .peachcard .desc{font-size:15px;font-weight:600;margin-top:8px;line-height:1.35}
+  .peachcard .psub{font-size:12px;opacity:.92;margin-top:8px;line-height:1.45;border-top:1px solid rgba(255,255,255,.28);padding-top:9px}
+  .bignum{font-size:44px;font-weight:700;letter-spacing:-1.5px;line-height:1}
+  .gbadge{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:700;color:var(--green);background:var(--greenbg);border-radius:20px;padding:2px 9px}
+  .prows{display:flex;flex-direction:column;gap:13px;margin-top:14px}
+  .prow .pl{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:6px}
+  .prow .pl b{font-weight:700}
+  .ptrack{height:8px;border-radius:6px;background:var(--panel2);overflow:hidden}
+  .ptrack>i{display:block;height:100%;border-radius:6px}
+  .waffle{display:grid;grid-auto-flow:column;grid-template-rows:repeat(4,10px);gap:4px;align-content:end}
+  .waffle i{width:10px;height:10px;border-radius:3px;background:var(--panel3)}
+  .peakpill{font-size:11px;font-weight:600;color:var(--ink2);background:var(--panel2);border:1px solid var(--line);border-radius:20px;padding:2px 9px}
+  .vsperiod{font-size:11.5px;color:var(--muted);text-align:right}.vsperiod b{color:var(--green);font-size:14px}
+  .token{background:var(--brexbg);color:var(--brex2);border:1px solid var(--brexbd);border-radius:7px;padding:1px 7px;font-weight:600;font-size:13px}
+  .stat.hero{background:linear-gradient(155deg,#fff 38%,#fff1e7);border-color:#f6dcc6}
+  .stat.hero .v{color:#c2410c}
+
+  /* ---------- Bid Desk components (same palette) ---------- */
+  .qd{display:grid;grid-template-columns:340px 1fr;gap:16px;align-items:start}
+  @media(max-width:1000px){.qd{grid-template-columns:1fr}}
+  .inbox .rfq{padding:13px 15px;border:1px solid var(--line);border-radius:14px;margin-bottom:10px;cursor:pointer;background:var(--panel);transition:.13s;box-shadow:var(--sh1)}
+  .inbox .rfq:hover{border-color:#d9d6cf;transform:translateY(-1px)}
+  .inbox .rfq.active{border-color:var(--brex);box-shadow:0 0 0 3px var(--brexbg)}
+  .inbox .rfq .top{display:flex;align-items:center;gap:7px;margin-bottom:5px;flex-wrap:wrap}
+  .inbox .rfq .cust{font-weight:650;font-size:13.5px}
+  .inbox .rfq .subj{font-size:12px;color:var(--muted);margin-bottom:7px}
+  .inbox .rfq .hl{font-size:11.5px;color:var(--ink2);line-height:1.45;background:var(--panel2);border:1px solid var(--line2);border-radius:9px;padding:8px 10px}
+  .inbox .rfq .meta{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center;font-size:11px;color:var(--faint)}
+  .runempty{padding:70px 30px;text-align:center;color:var(--muted)}
+  .runempty .big{font-size:40px;margin-bottom:10px}
+  .decision{border-radius:14px;padding:15px 18px;margin-bottom:16px;display:flex;align-items:center;gap:13px;border:1px solid;box-shadow:var(--sh1)}
+  .decision .ic{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:19px;flex-shrink:0;color:#fff}
+  .decision .t{font-weight:700;font-size:15px} .decision .s{font-size:12.5px;color:var(--ink2);margin-top:2px}
+  .decision.exec{background:var(--greenbg);border-color:#bfe6cb} .decision.exec .ic{background:var(--green)}
+  .decision.review{background:var(--amberbg);border-color:#f0dcbf} .decision.review .ic{background:var(--amber)}
+  .decision.escalate{background:var(--redbg);border-color:#f2c9c9} .decision.escalate .ic{background:var(--crit)}
+  .xtrace{position:relative;margin-left:6px;padding-left:19px;border-left:2px solid var(--line)}
+  .tev{position:relative;margin-bottom:11px;font-size:12.5px}
+  .tev:before{content:'';position:absolute;left:-26px;top:3px;width:9px;height:9px;border-radius:50%;background:var(--line);border:2px solid #fff}
+  .tev.done:before{background:var(--green)} .tev.run:before{background:var(--brex);animation:pulse 1s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .tev .lab{font-weight:500} .tev .st{font-size:9.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);font-weight:700;margin-left:7px}
+  .guards{display:flex;flex-direction:column;gap:7px}
+  .guard{display:flex;align-items:flex-start;gap:10px;padding:10px 13px;border-radius:10px;border:1px solid var(--line2);background:var(--panel2)}
+  .guard .gi{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;font-size:12px;color:#fff;flex-shrink:0;margin-top:1px}
+  .guard.pass .gi{background:var(--green)} .guard.warn .gi{background:var(--amber)} .guard.block .gi{background:var(--crit)}
+  .guard.block{background:var(--redbg);border-color:#f2c9c9} .guard.warn{background:var(--amberbg);border-color:#f0dcbf}
+  .guard .gl{font-weight:600;font-size:12.5px} .guard .gd{font-size:11.5px;color:var(--muted);margin-top:2px}
+  .guard .ge{font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-top:3px}
+  .tierbadge{font-family:var(--mono);font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:5px;text-transform:uppercase;letter-spacing:.3px}
+  .tierbadge.student{background:var(--bluebg);color:var(--blue)}
+  .tierbadge.teacher{background:var(--pinkbg);color:var(--pink)}
+  .tierbadge.memory{background:var(--greenbg);color:var(--green)}
+  .flash{animation:flash .6s ease}
+  @keyframes flash{0%{background:var(--brexbg)}100%{background:transparent}}
+  .comp{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:760px){.comp{grid-template-columns:1fr}}
+  .compcol{border:1px solid var(--line);border-radius:12px;padding:15px;background:var(--panel)}
+  .compcol.win{border-color:var(--brexbd);background:linear-gradient(155deg,#fff 30%,var(--brexbg))}
+  .compcol h4{margin:0 0 10px;font-size:12.5px;display:flex;align-items:center;gap:7px}
+  .compcol .crow{display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0;border-bottom:1px solid var(--line2)}
+  .compcol .crow:last-child{border:none} .compcol .crow .m{font-weight:600}
+  .callout{background:var(--aibg);border:1px solid var(--aibd);border-radius:12px;padding:13px 16px;font-size:12.5px;color:var(--ai2);line-height:1.55;margin-top:12px}
+  .callout b{color:var(--ink)}
+  .barwrap{display:flex;flex-direction:column;gap:6px}
+  .bar{height:26px;border-radius:7px;background:var(--panel2);border:1px solid var(--line2);position:relative;overflow:hidden}
+  .bar .fill{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#6aa2ff,var(--brex2))}
+  .bar .lbl{position:absolute;left:9px;top:0;bottom:0;display:flex;align-items:center;font-size:11px;font-weight:600;color:var(--ink);z-index:2}
+  .bar .val{position:absolute;right:9px;top:0;bottom:0;display:flex;align-items:center;font-size:11px;color:var(--ink2);z-index:2}
+  .editrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line2)}
+  .editrow:last-child{border:none}
+  .editrow .lab{flex:1} .editrow .lab b{font-size:13px} .editrow .lab .d{font-size:11.5px;color:var(--muted)}
+  .editrow input[type=number]{width:92px;border:1px solid var(--line);border-radius:9px;padding:7px 9px;font-family:var(--mono);font-size:13px}
+  .toggle{width:42px;height:24px;border-radius:999px;background:var(--line);position:relative;cursor:pointer;transition:.15s;flex-shrink:0}
+  .toggle.on{background:var(--green)} .toggle .k{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.15s;box-shadow:var(--sh1)}
+  .toggle.on .k{left:20px}
+  .note{background:var(--panel2);border:1px solid var(--line2);border-radius:12px;padding:12px 15px;color:var(--muted);font-size:12.5px;line-height:1.55}
+  .chat{display:flex;flex-direction:column;gap:11px;overflow-y:auto}
+  .bubble{border-radius:14px;padding:11px 14px;font-size:13px;line-height:1.58;max-width:92%}
+  .bubble.aib{background:var(--aibg);color:#1e3a8a;align-self:flex-start;border-bottom-left-radius:4px;border:1px solid var(--aibd)}
+  .bubble.you{background:var(--panel2);border:1px solid var(--line2);align-self:flex-end;border-bottom-right-radius:4px}
+  .bubble .who{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.6;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+  .bubble .srcs{margin-top:9px;display:flex;gap:5px;flex-wrap:wrap}
+  .srcchip{font-size:9.5px;font-weight:650;background:#fff;border:1px solid var(--aibd);border-radius:6px;padding:2px 7px;color:var(--muted);display:inline-flex;gap:4px;align-items:center}
+  .srcchip .sk{width:5px;height:5px;border-radius:50%;background:var(--brex)}
+  .srcchip.quote .sk{background:var(--blue)} .srcchip.account .sk{background:var(--green)} .srcchip.sku .sk{background:var(--pink)}
+  .cursor{display:inline-block;width:7px;height:13px;background:var(--brex);border-radius:1px;vertical-align:-2px;animation:blink .9s step-end infinite;margin-left:1px}
+  @keyframes blink{50%{opacity:0}}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+  .ccard .ct{font-weight:650;font-size:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .ccard .cv{font-size:11.5px;color:var(--faint);margin-top:1px}
+  .ccard .cd{font-size:12.5px;color:var(--ink2);margin-top:10px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><div class="logo">F</div><div class="nm">Forte</div></div>
+    <nav class="nav" id="nav"></nav>
+    <div class="sidefoot">
+      <div class="sideuser"><div class="avatar" id="avatar" title="Signed in">PE</div><select id="role" title="Viewing as">
+        <option value="precon">Precon / Estimating</option>
+        <option value="chief">Chief Estimator</option>
+        <option value="px">Project Executive</option>
+      </select></div>
+    </div>
+  </aside>
+  <div class="mainwrap">
+    <div class="topbar">
+      <div class="search" onclick="openPalette()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><span>Search…</span><span class="kbd">⌘K</span></div>
+      <div class="sp"></div>
+      <button class="iconbtn ghost" id="createBtn" title="Create"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button class="iconbtn ghost" id="bell" title="Needs attention" onclick="openPage('runs')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span class="badge" id="bellBadge" style="display:none">0</span></button>
+      <select id="model" title="AI model">
+        <option value="claude-opus-4-8">Opus 4.8</option>
+        <option value="claude-sonnet-4-6">Sonnet 4.6</option>
+        <option value="claude-haiku-4-5">Haiku 4.5</option>
+      </select>
+      <button class="ai" id="askBtn"><span class="aidiamond" style="color:#fff">◆</span> Ask AI</button>
+      <span class="cost" id="cost" title="teacher spend this session">$0.0000</span>
+    </div>
+    <main>
+      <div class="pghead">
+        <div class="tt"><div class="ttl" id="ttl">Home</div><div class="sub" id="sub">Command center</div></div>
+        <div class="sp"></div>
+        <span class="pillbadge" id="liveMode" style="padding:5px 11px">offline · cached</span>
+      </div>
+      <div class="page" id="page"><div class="spin">loading…</div></div>
+    </main>
+  </div>
+</div>
+
+<div class="ai" id="ai">
+  <div class="h"><span class="aidiamond">◆</span> <b>Forte AI</b><span class="muted" id="aiCtx"></span><span class="x" onclick="closeAI()">×</span></div>
+  <div class="body" id="aiBody"></div>
+</div>
+<div class="cmdk" id="cmdk" onclick="if(event.target===this)closePalette()">
+  <div class="cmdbox"><input id="cmdInput" placeholder="Search pages, bids, owners, assemblies…" autocomplete="off"><div class="cmdlist" id="cmdList"></div></div>
+</div>
+<div id="modalHost"></div>
+<div id="menuHost"></div>
+
+<script>
+const $=s=>document.querySelector(s), el=id=>document.getElementById(id);
+const mk=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e};
+const money=n=>(n<0?'-$':'$')+Math.round(Math.abs(+n||0)).toLocaleString();
+const money2=n=>n==null?'—':'$'+Number(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+const money1=n=>{n=+n||0;const a=Math.abs(n),s=n<0?'-':'';const U=[[1e12,'T',2],[1e9,'B',2],[1e6,'M',2],[1e3,'K',1]];
+  for(let i=0;i<U.length;i++){const[d,suf,p]=U[i];if(a>=d){if(+(a/d).toFixed(p)>=1000&&i>0)return s+'$'+(a/U[i-1][0]).toFixed(U[i-1][2])+U[i-1][1];return s+'$'+(a/d).toFixed(p)+suf;}}
+  return s+'$'+Math.round(a).toLocaleString();};
+const q1=s=>"'"+String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;')+"'";
+const pct=n=>(n*100).toFixed(1)+'%';
+const pct0=n=>Math.round(n*100)+'%';
+const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const rb=(b,t)=>`<span class="rb rb-${b}">${t}</span>`;
+const kpis=p=>'<div class="kpis">'+p.map(([k,v,s,cls])=>`<div class="kpi2 ${s==='hero'?'hero':''} ${cls||''}"><div class="k">${k}</div><div class="v">${v}</div>${s&&s!=='hero'?`<div class="s">${s}</div>`:''}</div>`).join('')+'</div>';
+function hbars(p,o){o=o||{};p=p.filter(x=>x&&x[1]!=null);const m=Math.max(...p.map(x=>+x[1]||0),1),col=o.color||'#3b82f6';return '<div class="hbars">'+p.slice(0,o.n||8).map(([k,v])=>`<div class="hbar"><div class="hl">${esc(k)}</div><div class="ht"><i style="width:${Math.max(2,100*(+v||0)/m).toFixed(1)}%;background:${col}"></i></div><div class="hv">${money1(v)}</div></div>`).join('')+'</div>';}
+function delta(p,goodUp){if(p==null)return '';const up=p>=0,good=(goodUp!==false)?up:!up;return `<span class="delta ${good?'up':'down'}">${up?'▲':'▼'} ${Math.abs(p*100).toFixed(1)}%</span>`;}
+function stat(label,value,o){o=o||{};const sk=o.spark&&o.spark.length>1?spark(o.spark,o.accent||(o.hero?'#3b82f6':'#9aa1ab')):'';const d=o.delta!=null?delta(o.delta,o.goodUp):'';const sub=o.sub?`<span>${o.sub}</span>`:'';return `<div class="stat ${o.hero?'hero':''} ${o.ai?'ai':''}"><div class="k">${esc(label)}</div><div class="vrow"><div class="v">${value}</div>${sk}</div><div class="s">${d}${sub||(d?'':'&nbsp;')}</div></div>`;}
+
+// ---------- icons (feather-style, 2px stroke) ----------
+const ICON={
+  home:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>',
+  grid:'<rect x="3" y="3" width="7.5" height="7.5" rx="1.4"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.4"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.4"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.4"/>',
+  receipt:'<path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 7h6M9 11h6M9 15h4"/>',
+  card:'<rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/>',
+  box:'<path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/>',
+  tasks:'<path d="M4 5h16v14H4z"/><path d="M8.5 12l2.2 2.2L16 9"/>',
+  bill:'<path d="M14 2H6v20h12V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/>',
+  scan:'<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M4 12h16"/>',
+  check:'<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>',
+  shield:'<path d="M12 2l8 3v6c0 5-3.5 8-8 11-4.5-3-8-6-8-11V5z"/>',
+  book:'<path d="M5 4a2 2 0 0 1 2-2h11v20H7a2 2 0 0 1-2-2z"/><path d="M9 2v18"/>',
+  bank:'<path d="M3 10l9-6 9 6"/><path d="M5 10v9M19 10v9M9 10v9M15 10v9"/><path d="M3 21h18"/>',
+  trend:'<path d="M3 17l6-6 4 4 7-8"/><path d="M17 7h4v4"/>',
+  export:'<path d="M12 3v13"/><path d="M7 11l5 5 5-5"/><path d="M4 21h16"/>',
+  people:'<circle cx="9" cy="8" r="3"/><path d="M3.5 20c0-3.3 2.7-5.5 5.5-5.5s5.5 2.2 5.5 5.5"/><path d="M16.5 5.2a3 3 0 0 1 0 5.6"/>',
+  alert:'<path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17.5v.5"/>',
+  layers:'<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+  bolt:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+  play:'<path d="M6 4l14 8-14 8z"/>',
+  hat:'<path d="M4 15h16v3H4z"/><path d="M7 15V9a5 5 0 0 1 10 0v6"/><path d="M12 4v5"/>'};
+function ic(n){return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON[n]||ICON.grid}</svg>`;}
+
+// ---------- charts ----------
+function spark(vals,color){color=color||'#3b82f6';const W=110,H=30,p=3,n=vals.length,min=Math.min(...vals),max=Math.max(...vals);
+  const X=i=>p+(W-2*p)*i/(n-1),Y=v=>H-p-(H-2*p)*(v-min)/((max-min)||1);
+  const d=vals.map((v,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)).join(' ');
+  const area=d+` L${X(n-1).toFixed(1)} ${H-p} L${X(0).toFixed(1)} ${H-p} Z`;
+  return `<svg viewBox="0 0 ${W} ${H}" width="86" height="26" class="spark"><path d="${area}" fill="${color}" opacity=".11"/><path d="${d}" fill="none" stroke="${color}" stroke-width="1.75"/><circle cx="${X(n-1).toFixed(1)}" cy="${Y(vals[n-1]).toFixed(1)}" r="2" fill="${color}"/></svg>`;}
+function lineChart(o){
+  const S=o.series||[],labels=o.labels||[];
+  const all=S.flatMap(s=>s.data||[]).filter(v=>v!=null).concat(o.band?o.band.lo.concat(o.band.hi).filter(v=>v!=null):[]);
+  if(!all.length)return '<div class="muted" style="padding:20px">no data</div>';
+  const H=o.height||250,W=880,padL=62,padR=18,padT=14,padB=26;
+  let min=Math.min(...all),max=Math.max(...all);if(min>0)min=Math.min(min,min*.9);const span=(max-min)||1;min-=span*.04;max+=span*.06;
+  const n=Math.max(labels.length,2);
+  const X=i=>padL+(W-padL-padR)*i/(n-1),Y=v=>padT+(H-padT-padB)*(1-(v-min)/((max-min)||1));
+  const fY=o.fmtY||money1;
+  let g='';for(let k=0;k<=4;k++){const v=min+(max-min)*k/4,y=Y(v);g+=`<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}" stroke="var(--line2)"/><text x="${padL-8}" y="${(y+4).toFixed(1)}" text-anchor="end" class="axl">${fY(v)}</text>`;}
+  const st=Math.max(1,Math.floor(n/6));for(let i=0;i<n;i+=st)g+=`<text x="${X(i).toFixed(1)}" y="${H-8}" text-anchor="middle" class="axl">${esc(labels[i]||'')}</text>`;
+  const path=d=>{let p='',on=false;d.forEach((v,i)=>{if(v==null){on=false;return;}p+=(on?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)+' ';on=true;});return p;};
+  const area=d=>{let p='',on=false,f=null,l=null;d.forEach((v,i)=>{if(v==null)return;if(!on){p+='M'+X(i).toFixed(1)+' '+Y(v).toFixed(1)+' ';f=i;on=true;}else p+='L'+X(i).toFixed(1)+' '+Y(v).toFixed(1)+' ';l=i;});if(!on)return '';return p+`L${X(l).toFixed(1)} ${Y(min).toFixed(1)} L${X(f).toFixed(1)} ${Y(min).toFixed(1)} Z`;};
+  let svg=g;
+  if(o.band){const lo=o.band.lo,hi=o.band.hi,pts=lo.map((v,i)=>v==null?null:i).filter(i=>i!=null);
+    if(pts.length){const top=pts.map((i,k)=>(k?'L':'M')+X(i).toFixed(1)+' '+Y(hi[i]).toFixed(1)).join(' ');
+      const bot=pts.slice().reverse().map(i=>'L'+X(i).toFixed(1)+' '+Y(lo[i]).toFixed(1)).join(' ');
+      svg+=`<path d="${top} ${bot} Z" fill="${o.band.color||'#3b82f6'}" opacity=".11"/>`;}}
+  if(o.forecastFrom!=null&&o.forecastFrom>0&&o.forecastFrom<n){const x=X(o.forecastFrom);svg+=`<line x1="${x.toFixed(1)}" y1="${padT}" x2="${x.toFixed(1)}" y2="${H-padB}" stroke="var(--muted)" stroke-dasharray="4 4" opacity=".5"/><text x="${(x+5).toFixed(1)}" y="${padT+9}" class="axl">today</text>`;}
+  S.forEach(s=>{if(s.fill!==false)svg+=`<path d="${area(s.data)}" fill="${s.color}" opacity=".07"/>`;});
+  S.forEach(s=>{svg+=`<path d="${path(s.data)}" fill="none" stroke="${s.color}" stroke-width="2.25" ${s.dashed?'stroke-dasharray="6 4"':''} stroke-linejoin="round" stroke-linecap="round"/>`;
+    const l=[...s.data].map((v,i)=>v==null?null:i).filter(i=>i!=null).pop();if(l!=null)svg+=`<circle cx="${X(l).toFixed(1)}" cy="${Y(s.data[l]).toFixed(1)}" r="3.4" fill="${s.color}"/>`;});
+  const leg=(S.length>1||o.band)?`<div class="legend">${S.map(s=>`<span><i style="background:${s.color}"></i>${esc(s.name)}</span>`).join('')}${o.band?`<span><i style="background:${o.band.color||'#3b82f6'};opacity:.5"></i>${esc(o.band.name||'range')}</span>`:''}</div>`:'';
+  return `<svg viewBox="0 0 ${W} ${H}" class="chart2" preserveAspectRatio="xMidYMid meet" role="img">${svg}</svg>${leg}`;}
+const DCOL=['#3b82f6','#ec4899','#22c55e','#f59e0b','#8b5cf6','#06b6d4','#a3a29c'];
+function donut(pairs){pairs=pairs.filter(p=>p&&p[1]>0);const rest=pairs.slice(5).reduce((a,p)=>a+p[1],0);pairs=pairs.slice(0,5);if(rest>0)pairs.push(['Other',rest]);
+  const total=pairs.reduce((a,p)=>a+p[1],0)||1,R=52,r=33,cx=60,cy=60;let a=-Math.PI/2,seg='';
+  pairs.forEach((p,i)=>{const fr=p[1]/total,a2=a+fr*2*Math.PI,x1=cx+R*Math.cos(a),y1=cy+R*Math.sin(a),x2=cx+R*Math.cos(a2),y2=cy+R*Math.sin(a2),xi1=cx+r*Math.cos(a2),yi1=cy+r*Math.sin(a2),xi2=cx+r*Math.cos(a),yi2=cy+r*Math.sin(a),lg=fr>.5?1:0;
+    seg+=`<path d="M${x1.toFixed(1)} ${y1.toFixed(1)} A${R} ${R} 0 ${lg} 1 ${x2.toFixed(1)} ${y2.toFixed(1)} L${xi1.toFixed(1)} ${yi1.toFixed(1)} A${r} ${r} 0 ${lg} 0 ${xi2.toFixed(1)} ${yi2.toFixed(1)} Z" fill="${DCOL[i%DCOL.length]}"/>`;a=a2;});
+  const leg=pairs.map((p,i)=>`<div class="dleg"><i style="background:${DCOL[i%DCOL.length]}"></i><span style="flex:1">${esc(String(p[0]))}</span><span class="muted">${money1(p[1])}</span></div>`).join('');
+  return `<div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap"><svg viewBox="0 0 120 120" width="120" height="120" style="flex-shrink:0">${seg}<text x="60" y="57" text-anchor="middle" style="font-size:9px;fill:var(--muted)">total</text><text x="60" y="70" text-anchor="middle" style="font-size:13px;font-weight:700;fill:var(--ink)">${money1(total)}</text></svg><div style="flex:1;min-width:150px">${leg}</div></div>`;}
+function funnelBars(items){
+  const W=680,H=210,padT=30,padB=42,n=items.length,max=Math.max(...items.map(i=>+i.value||0),1);
+  const gap=W/n,bw=gap*0.6,Y=v=>padT+(H-padT-padB)*(1-v/max);
+  const defs=`<defs><linearGradient id="fg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6aa2ff"/><stop offset="1" stop-color="#1f56e0"/></linearGradient>`+
+    `<pattern id="hatch" width="7" height="7" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><rect width="7" height="7" fill="#3b82f6" opacity=".10"/><line x1="0" y1="0" x2="0" y2="7" stroke="#3b82f6" stroke-width="3" opacity=".26"/></pattern></defs>`;
+  let g='';
+  items.forEach((it,i)=>{const x=gap*i+(gap-bw)/2,y=Y(+it.value||0),h=Math.max(2,(H-padB)-y),act=it.active;
+    g+=`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="7" fill="${act?'url(#fg)':'url(#hatch)'}"/>`;
+    g+=`<text x="${(x+bw/2).toFixed(1)}" y="${(y-9).toFixed(1)}" text-anchor="middle" style="font-size:14px;font-weight:700;fill:${act?'#1f56e0':'#71717a'}">${esc(it.value_label)}</text>`;
+    g+=`<text x="${(x+bw/2).toFixed(1)}" y="${(H-padB+18).toFixed(1)}" text-anchor="middle" style="font-size:11px;fill:#8b8a83">${esc(it.label)}</text>`;});
+  return `<svg viewBox="0 0 ${W} ${H}" class="chart2" preserveAspectRatio="xMidYMid meet">${defs}${g}</svg>`;}
+function waffle(vals,color){color=color||'#22c55e';vals=(vals||[]).slice(-16);const max=Math.max(...vals,1);
+  return '<div class="waffle">'+vals.map(v=>{const f=Math.max(0,Math.round((+v||0)/max*4));let c='';for(let r=0;r<4;r++)c+=`<i style="background:${r>=(4-f)?color:'var(--panel3)'}"></i>`;return c;}).join('')+'</div>';}
+function steppedArea(vals,color){color=color||'#ec4899';const W=560,H=180,padL=4,padR=4,padT=14,padB=8,n=vals.length;
+  const min=Math.min(...vals),max=Math.max(...vals),X=i=>padL+(W-padL-padR)*i/(n-1),Y=v=>padT+(H-padT-padB)*(1-(v-min)/((max-min)||1));
+  let line='M'+X(0).toFixed(1)+' '+Y(vals[0]).toFixed(1);
+  for(let i=1;i<n;i++)line+=' H'+X(i).toFixed(1)+' V'+Y(vals[i]).toFixed(1);
+  const area=line+` V${(H-padB).toFixed(1)} H${X(0).toFixed(1)} Z`;
+  return `<svg viewBox="0 0 ${W} ${H}" class="chart2" preserveAspectRatio="none" style="height:150px"><path d="${area}" fill="${color}" opacity=".14"/><path d="${line}" fill="none" stroke="${color}" stroke-width="2.2" vector-effect="non-scaling-stroke"/></svg>`;}
+function progressRows(items){const max=Math.max(...items.map(i=>+i.value||0),1);
+  return '<div class="prows">'+items.map(it=>`<div class="prow"><div class="pl"><span>${esc(it.label)}</span><b>${money(it.value)}</b></div><div class="ptrack"><i style="width:${Math.max(3,100*(+it.value||0)/max).toFixed(0)}%;background:${it.color}"></i></div></div>`).join('')+'</div>';}
+function peachInsight(o){return `<div class="peachcard"><span class="lab"><span class="aidiamond" style="color:#fff">◆</span> ${esc(o.label||'Insight')}</span><div class="big">${esc(o.big)}</div><div class="desc">${esc(o.desc)}</div>${o.sub?`<div class="psub">${esc(o.sub)}</div>`:''}</div>`;}
+
+// ---------- interactive data grid ----------
+const GRIDS={};
+function grid(id,cols,rows,opts){opts=opts||{};
+  GRIDS[id]={cols,rows,sort:opts.sort||null,rowClick:opts.rowClick||null,file:opts.file||'export',title:opts.title||'',serverCsv:opts.serverCsv||null,noexport:opts.noexport||false};
+  return `<div class="grid" id="${id}">${gridBody(id)}</div>`;}
+function dlUrl(u){const a=document.createElement('a');a.href=u;a.download='';document.body.appendChild(a);a.click();a.remove();}
+function gridRows(id){const g=GRIDS[id];let rows=g.rows.slice();
+  if(g.sort){const c=g.cols.find(x=>x.key===g.sort.key),dir=g.sort.dir==='asc'?1:-1;
+    if(c)rows.sort((a,b)=>{let va=c.get(a),vb=c.get(b);
+      if(c.type==='num')return ((+va||0)-(+vb||0))*dir;
+      va=String(va==null?'':va).toLowerCase();vb=String(vb==null?'':vb).toLowerCase();
+      return va<vb?-dir:va>vb?dir:0;});}
+  return rows;}
+function gridBody(id){const g=GRIDS[id],rows=gridRows(id);
+  const head='<tr>'+g.cols.map(c=>{const al=c.align==='n'?'n':'';
+    if(c.nosort)return `<th class="${al}">${esc(c.label)}</th>`;
+    const on=g.sort&&g.sort.key===c.key,ar=on?(g.sort.dir==='asc'?'▲':'▼'):'';
+    return `<th class="sortable ${al}" onclick="sortGrid('${id}','${c.key}')">${esc(c.label)}<span class="arr"> ${ar}</span></th>`;}).join('')+'</tr>';
+  const body=rows.map(r=>{const cl=g.rowClick?` class="click" onclick="${g.rowClick(r)}"`:'';
+    return `<tr${cl}>`+g.cols.map(c=>`<td class="${c.align==='n'?'n':''} ${c.wrap?'wrap':''}">${c.cell?c.cell(r):esc(c.get(r))}</td>`).join('')+'</tr>';}).join('');
+  return `<div class="tbar">${g.title?`<span class="ct"><b>${esc(g.title)}</b></span>`:''}<span class="ct">${rows.length.toLocaleString()} row${rows.length===1?'':'s'}</span><span class="sp"></span>
+    ${g.serverCsv?`<button class="sm" onclick="dlUrl('${g.serverCsv}')" title="Server-side full export (all rows)">⤓ Export all</button>`:''}
+    ${g.noexport?'':`<button class="sm" onclick="exportGrid('${id}')" title="Download what's shown (current sort) as CSV">⤓ Export CSV</button>`}</div>
+    <div class="tablewrap"><table>${head}${body}</table></div>`;}
+function sortGrid(id,key){const g=GRIDS[id],c=g.cols.find(x=>x.key===key);
+  if(g.sort&&g.sort.key===key)g.sort.dir=g.sort.dir==='asc'?'desc':'asc';
+  else g.sort={key,dir:c.type==='num'?'desc':'asc'};
+  el(id).innerHTML=gridBody(id);}
+function exportGrid(id){const g=GRIDS[id],rows=gridRows(id),cols=g.cols.filter(c=>!c.noexport);
+  const q=v=>{v=v==null?'':String(v);return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+  const csv=[cols.map(c=>q(c.label)).join(',')].concat(rows.map(r=>cols.map(c=>q(c.get(r))).join(','))).join('\r\n');
+  const blob=new Blob([String.fromCharCode(0xFEFF)+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=(g.file||'export')+'.csv';document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1500);}
+
+async function jget(u){const r=await fetch(u);if(!r.ok)throw new Error(u+' '+r.status);return r.json();}
+async function jpost(u,b){const r=await fetch(u,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b||{})});if(!r.ok)throw new Error((await r.json().catch(()=>({}))).detail||u+' '+r.status);return r.json();}
+
+const STATE={role:'precon',model:'claude-opus-4-8',cost:0,page:null,navIds:new Set(),attention:0,current:null,stream:null,apiKey:false};
+
+// ---------- pages + nav ----------
+const PAGES={
+  home:{title:'Home',sub:'Command center',render:pgHome},
+  desk:{title:'Bid Desk',sub:'Read a solicitation, execute the estimate',render:pgDesk},
+  ask:{title:'Forte AI',sub:'Grounded answers over the live desk',render:pgAsk},
+  routing:{title:'Model Routing',sub:'Student → teacher scope identification',render:pgRouting},
+  brain:{title:'Playbook',sub:'Editable estimating memory',render:pgBrain},
+  connectors:{title:'Connectors',sub:'The systems the agent plugs into',render:pgConnectors},
+  catalog:{title:'Cost Library',sub:'Assemblies, schedule rates & availability',render:pgCatalog},
+  runs:{title:'Runs',sub:'Everything the agent executed this session',render:pgRuns},
+  creator:{title:'Creator',sub:'The engineer behind the Bid Desk',render:pgCreator},
+};
+const NAVGROUPS=[
+  ['Overview',[['home','Home','home'],['desk','Bid Desk','bill'],['ask','Forte AI','bolt']]],
+  ['Intelligence',[['routing','Model Routing','trend'],['brain','Playbook','book']]],
+  ['Systems',[['connectors','Connectors','layers'],['catalog','Cost Library','box'],['runs','Runs','tasks']]],
+  ['About',[['creator','Creator','people']]],
+];
+const ROLE_INIT={precon:'PE',chief:'CE',px:'PX'};
+
+async function boot(){
+  el('role').onchange=e=>{STATE.role=e.target.value;el('avatar').textContent=ROLE_INIT[STATE.role]||'FC';};
+  el('model').onchange=e=>{STATE.model=e.target.value;};
+  el('askBtn').onclick=()=>openAI();
+  el('createBtn').onclick=createMenu;
+  document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openPalette();}if(e.key==='Escape'){closePalette();closeMenu();closeModal();}});
+  el('cmdInput').oninput=renderPalette;
+  el('cmdInput').onkeydown=paletteKey;
+  el('nav').innerHTML=NAVGROUPS.map(([g,items])=>`<div class="grp">${g}</div>`+items.map(([id,t,icn])=>{STATE.navIds.add(id);return `<a data-p="${id}">${ic(icn)}<span>${t}</span>${id==='runs'?'<span class="cnt" id="navTasks" style="display:none"></span>':''}</a>`;}).join('')).join('');
+  el('nav').querySelectorAll('a').forEach(a=>a.onclick=()=>openPage(a.dataset.p));
+  try{const h=await jget('/api/health');STATE.apiKey=!!h.api_key;el('liveMode').textContent=h.api_key?'live · Claude teacher on':'offline · cached';el('liveMode').className='pillbadge '+(h.api_key?'pill-healthy':'');el('liveMode').style.padding='5px 11px';}catch(e){}
+  refreshTasks();
+  const params=new URLSearchParams(location.search);
+  openPage(PAGES[params.get('page')]?params.get('page'):'home');
+}
+function openPage(id){
+  if(!PAGES[id])return; STATE.page=id; navGen();
+  if(STATE.stream){STATE.stream.close();STATE.stream=null;}
+  el('ttl').textContent=PAGES[id].title; el('sub').textContent=PAGES[id].sub||'';
+  el('nav').querySelectorAll('a').forEach(a=>a.classList.toggle('on',a.dataset.p===id));
+  const pg=el('page'); pg.innerHTML=skeleton();
+  Promise.resolve().then(()=>PAGES[id].render()).catch(e=>{pg.innerHTML='<div class="card">Error loading page: '+esc(String(e))+'</div>';});
+  closePalette(); window.scrollTo(0,0);
+}
+function navGen(){return STATE.nav=(STATE.nav||0)+1;}
+function fresh(g){return g===(STATE.nav||0);}
+function view(){return el('page');}
+function skeleton(){return `<div class="skgrid">${Array(4).fill('<div class="sk" style="height:86px"></div>').join('')}</div><div class="sk" style="height:250px;margin-top:16px"></div>`;}
+const askLink=q=>`<button class="sm ai" style="margin-left:8px" onclick="askData(${q1(q||'')})"><span class="aidiamond" style="color:#fff">◆</span> Ask AI</button>`;
+function openDesk(rfq){STATE.current=rfq||STATE.current;openPage('desk');}
+function goInsight(link,rfq){if(rfq)STATE.current=rfq;openPage(link||'desk');}
+async function refreshTasks(){try{const d=await jget('/api/overview');const n=(d.quotes.escalate||0)+(d.quotes.review||0);STATE.attention=n;const b=el('bellBadge');if(b){b.style.display=n?'flex':'none';b.textContent=n;}const nt=el('navTasks');if(nt){nt.style.display=n?'inline':'none';nt.textContent=n;}}catch(e){}
+  try{const runs=await jget('/api/runs');const c=runs.reduce((a,r)=>a+(r.cost_usd||0),0);el('cost').textContent='$'+c.toFixed(4);}catch(e){}}
+
+// ---------- Command palette ----------
+let PAL={items:[],sel:0};
+function paletteItems(){
+  const nav=Object.keys(PAGES).map(id=>({grp:'Go to',label:PAGES[id].title,sub:PAGES[id].sub,icon:navIcon(id),run:()=>openPage(id)}));
+  const acts=[
+    {grp:'Actions',label:'Run the next solicitation',icon:'play',run:()=>runNext()},
+    {grp:'Actions',label:'Ask Forte AI',icon:'bolt',run:()=>openAI()},
+    {grp:'Actions',label:'Precon morning brief',icon:'bolt',run:()=>{openPage('home');setTimeout(genBrief,700);}},
+    {grp:'Actions',label:'Teach the Playbook a phrase',icon:'book',run:()=>openPage('brain')},
+    {grp:'Actions',label:'Recompute routing metrics',icon:'trend',run:()=>recomputeRouting()},
+    {grp:'Actions',label:'Export estimates (CSV)',icon:'export',run:()=>dlUrl('/api/quotes.csv')},
+  ];
+  return nav.concat(acts);
+}
+function navIcon(id){for(const g of NAVGROUPS)for(const it of g[1])if(it[0]===id)return it[2];return 'grid';}
+function openPalette(){el('cmdk').classList.add('open');el('cmdInput').value='';el('cmdInput').focus();renderPalette();}
+function closePalette(){el('cmdk').classList.remove('open');}
+let _palT=null;
+function renderPalette(){const q=el('cmdInput').value.trim().toLowerCase();
+  let items=paletteItems();if(q)items=items.filter(i=>(i.label+' '+(i.sub||'')).toLowerCase().includes(q));
+  paintItems(items);
+  clearTimeout(_palT);
+  if(q.length>=2){_palT=setTimeout(async()=>{try{const r=await jget('/api/search?q='+encodeURIComponent(q));if(el('cmdInput').value.trim().toLowerCase()!==q)return;
+    const found=(r.results||[]).map(x=>({grp:'Data',label:x.label,sub:x.sub,icon:x.kind==='bid'?'bill':x.kind==='owner'?'people':'box',run:()=>{if(x.kind==='bid')openDesk(x.id);else if(x.kind==='owner'){STATE.current=null;openPage('desk');}else{STATE.catFilter=x.id;openPage('catalog');}}}));
+    paintItems(items.concat(found));}catch(e){}},180);}
+}
+function paintItems(items){PAL.items=items;PAL.sel=0;
+  let html='',grp='';items.forEach((it,i)=>{if(it.grp!==grp){grp=it.grp;html+=`<div class="cmdgrp">${grp}</div>`;}html+=`<div class="cmditem ${i===0?'sel':''}" data-i="${i}" onmouseover="PAL.sel=${i};paintPalette()" onclick="runPalette(${i})">${ic(it.icon)}<span>${esc(it.label)}</span>${it.sub?`<span class="cs">${esc(it.sub)}</span>`:''}</div>`;});
+  el('cmdList').innerHTML=html||'<div class="cmdgrp">No matches</div>';}
+function paintPalette(){el('cmdList').querySelectorAll('.cmditem').forEach(e=>e.classList.toggle('sel',+e.dataset.i===PAL.sel));}
+function runPalette(i){const it=PAL.items[i];closePalette();if(it)it.run();}
+function paletteKey(e){if(e.key==='ArrowDown'){e.preventDefault();PAL.sel=Math.min(PAL.sel+1,PAL.items.length-1);paintPalette();scrollSel();}
+  else if(e.key==='ArrowUp'){e.preventDefault();PAL.sel=Math.max(PAL.sel-1,0);paintPalette();scrollSel();}
+  else if(e.key==='Enter'){e.preventDefault();runPalette(PAL.sel);}}
+function scrollSel(){const s=el('cmdList').querySelector('.cmditem.sel');if(s)s.scrollIntoView({block:'nearest'});}
+function createMenu(){const items=[['▶ Run the next solicitation',"runNext()"],['Open Bid Desk',"openPage('desk')"],['Teach the Playbook',"openPage('brain')"],['Recompute routing',"recomputeRouting()"],['Export estimates (CSV)',"dlUrl('/api/quotes.csv')"],['Ask Forte AI',"openAI()"]];
+  showMenu(el('createBtn'),items.map(([l,fn])=>`<button onclick="closeMenu();${fn}">${l}</button>`).join(''));}
+function showMenu(anchor,html){const r=anchor.getBoundingClientRect();el('menuHost').innerHTML=`<div class="menu" style="top:${r.bottom+6}px;left:${r.left}px" onclick="event.stopPropagation()">${html}</div>`;setTimeout(()=>document.addEventListener('click',closeMenu,{once:true}),0);}
+function closeMenu(){el('menuHost').innerHTML='';}
+async function runNext(){try{const r=await jget('/api/rfqs');const o=await jget('/api/overview');const done=new Set((o.recent||[]).map(x=>x.rfq_id));const next=r.find(x=>!done.has(x.id))||r[0];openDesk(next?next.id:null);}catch(e){openPage('desk');}}
+async function recomputeRouting(){showModal('<div class="spin">recomputing the routing calibration over the cost library…</div>');try{await jpost('/api/routing/run');closeModal();openPage('routing');}catch(e){showModal('<div class="red">'+esc(String(e))+'</div>');}}
+
+// ---------- Home: command center ----------
+function insightCard(i){const c=({critical:'critical',high:'high',medium:'medium',low:'low'})[i.severity]||'low';
+  return `<div class="insight"><div class="ic ic-${c}">${ic(i.icon||'alert')}</div><div class="bd"><div class="t">${esc(i.title)}${i.amount_usd?` <span class="amt">· ${money1(i.amount_usd)}</span>`:''}</div><div class="d">${esc(i.detail)}</div><div class="act"><button class="sm" onclick="goInsight(${q1(i.link)},${q1(i.rfq||'')})">${esc(i.action)} →</button></div></div></div>`;}
+function coSearchHTML(inp,dd,ph){return `<div class="cosearch-wrap"><div class="cosearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input id="${inp}" placeholder="${esc(ph)}" autocomplete="off"></div><div class="typeahead" id="${dd}" style="display:none"></div></div>`;}
+function wireCoSearch(inp,dd){
+  const i=el(inp); if(!i)return; const hide=()=>{const d=el(dd);if(d)d.style.display='none';};
+  i.oninput=()=>{clearTimeout(window._cot);const q=i.value.trim();if(q.length<2){hide();return;}
+    window._cot=setTimeout(async()=>{try{const r=await jget('/api/search?q='+encodeURIComponent(q));const d=el(dd);if(!d)return;
+      if(!r.results||!r.results.length){d.innerHTML='<div class="ta-item" style="cursor:default;color:var(--muted)">No matches</div>';d.style.display='block';return;}
+      d.innerHTML=r.results.map(x=>`<div class="ta-item" onmousedown="pickSearch(${q1(x.kind)},${q1(x.id)})"><span class="sr-tk">${esc(x.kind)}</span><span>${esc(x.label)}</span><span class="muted" style="margin-left:auto;font-size:11.5px">${esc(x.sub||'')}</span></div>`).join('');d.style.display='block';
+    }catch(e){hide();}},220);};
+  i.onkeydown=e=>{if(e.key==='Enter'){const f=el(dd)&&el(dd).querySelector('.ta-item[onmousedown]');if(f)f.dispatchEvent(new MouseEvent('mousedown'));}else if(e.key==='Escape')hide();};
+  i.onblur=()=>setTimeout(hide,160);
+}
+function pickSearch(kind,id){if(kind==='bid')openDesk(id);else if(kind==='owner'){STATE.current=null;openPage('desk');}else{STATE.catFilter=id;openPage('catalog');}}
+async function pgHome(){
+  const g=navGen();
+  const [d,rfqs]=await Promise.all([jget('/api/overview'),jget('/api/rfqs')]);
+  if(!fresh(g))return;
+  const q=d.quotes,r=d.routing,c=d.counts,cf=d.backlog;
+  const hist=cf.history.map(h=>h.balance_usd), fcst=cf.forecast.map(f=>f.p50_usd);
+  const months=cf.history.map(h=>h.date).concat(cf.forecast.map(f=>f.date));
+  const band={lo:cf.history.map(_=>null).concat(cf.forecast.map(f=>f.p10_usd)),hi:cf.history.map(_=>null).concat(cf.forecast.map(f=>f.p90_usd)),name:'p10–p90'};
+  const trend=d.monthly_trend.map(m=>m.bid_value), bids=d.monthly_trend.map(m=>m.bids);
+  const divs=Object.entries(d.by_division), catColors=['#3b82f6','#22c55e','#ec4899','#f59e0b'];
+  const funnel=d.monthly_trend.map((m,i)=>({label:m.month,value:m.bid_value,value_label:money1(m.bid_value),active:i===d.monthly_trend.length-1}));
+  const floor=d.policies.margin_floor, mdelta=q.n?(q.avg_margin-floor)/floor:null;
+  const recent=d.recent||[], margins=recent.map(x=>x.blended_margin);
+  view().innerHTML=`
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px">
+      <span class="pill" onclick="runNext()">${ic('play')} Run next bid</span>
+      <span class="pill" onclick="openPage('desk')">${ic('bill')} Open Bid Desk</span>
+      <span class="pill" onclick="dlUrl('/api/quotes.csv')">${ic('export')} Export</span>
+      <div style="flex:1"></div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+        <span class="muted" style="font-size:12.5px">${esc(d.company)} · as of ${esc(d.as_of||'today')}</span>
+        ${coSearchHTML('homeCoq','homeCoDD','Search bids, owners, assemblies — MTA, HJ-40, curtain wall…')}
+      </div>
+    </div>
+    <div class="strip">
+      ${stat('Open solicitations',c.open_rfqs,{sub:`${q.auto} auto-submitted · ${q.escalate+q.review} held`,spark:bids,accent:'#3b82f6'})}
+      ${stat('Value in the desk',money1(q.total_value),{sub:`across ${q.n} estimates`})}
+      ${stat('Cheap-tier resolve',r.cheap_tier_pct+'%',{sub:`<span class="pillbadge pill-healthy">${Math.round(r.student_precision*100)}% precision</span>`})}
+      ${stat('Avg blended margin',pct(q.avg_margin),{delta:mdelta,sub:`vs ${pct0(floor)} floor`,spark:margins.length>1?margins:null,accent:'#ec4899'})}
+      ${stat('M/WBE participation',pct0(q.mwbe_share),{sub:`goal ${pct0(d.policies.mwbe_goal||0)} · public owners`})}
+      ${stat('Serving cost saved',r.cost_reduction_pct+'%',{hero:true,sub:'vs frontier on every lookup'})}
+    </div>
+
+    <div class="row g2" style="margin-top:16px">
+      <div class="card"><div class="ch"><h3>Bid volume</h3><span class="muted" style="font-size:12px">last ${d.monthly_trend.length} months · illustrative</span><span class="sp"></span><span class="muted">⋯</span></div>
+        ${funnelBars(funnel)}
+        <div class="aiask">
+          <div class="aiask-h"><span class="aidiamond">◆</span> Forte AI <span class="aiask-tag">beta</span></div>
+          <div class="aiask-sub">Ask me anything about the solicitations, owner standing, availability, alternates or the routing engine — I read the live desk data before answering.</div>
+          <div class="askbar"><span class="aidiamond" style="font-size:16px">◆</span><input id="askData" placeholder="What would you like to explore next?" onkeydown="if(event.key==='Enter')askData(this.value||'Which estimates are safe to auto-submit?')"><button class="ai sm" onclick="askData(el('askData').value||'Which estimates are safe to auto-submit?')">Ask</button></div>
+          <div class="askchips">
+            <span onclick="askData('Why did the SCA estimate get escalated?')">Why did SCA escalate?</span>
+            <span onclick="askData('Which assemblies are unavailable right now, and what are the alternates?')">What's unavailable?</span>
+            <span onclick="askData('Is DDC clear to bid?')">Is DDC clear to bid?</span>
+            <span onclick="askData('How is the M/WBE participation on each bid?')">M/WBE participation</span>
+            <span onclick="askData('What does the student → teacher routing save us?')">What does routing save?</span>
+          </div>
+        </div>
+      </div>
+      <div class="card"><div class="ch"><h3>Estimate pipeline</h3><span class="muted" style="font-size:12px">this cycle</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><div class="bignum">${money1(q.total_value)}</div><span class="gbadge">▲ ${q.auto}/${q.n} submitted</span></div>
+        ${progressRows(divs.slice(0,4).map((x,i)=>({label:x[0],value:x[1],color:catColors[i%catColors.length]})))}
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:16px;margin-top:16px">
+      <div class="card"><div class="ch"><h3>Bid volume trend</h3><span class="sp"></span><span class="peakpill">${d.monthly_trend.length} mo</span></div>${steppedArea(trend,'#ec4899')}</div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card"><div class="ch"><h3>Scope lines</h3></div><div style="display:flex;justify-content:space-between;align-items:flex-end;gap:10px"><div class="bignum" style="font-size:32px">${c.lines.toLocaleString()}</div><div class="vsperiod">to the teacher<br><b>${c.teacher_lines}</b></div></div><div style="margin-top:12px">${waffle(recent.map(x=>x.n_lines),'#22c55e')}</div></div>
+        <div class="card"><div class="ch"><h3>Active estimates</h3></div><div style="display:flex;justify-content:space-between;align-items:flex-end;gap:10px"><div class="bignum" style="font-size:32px">${q.n}</div><span class="peakpill">${q.auto} submitted</span></div><div style="margin-top:12px">${waffle(recent.map(x=>x.subtotal),'#3b82f6')}</div></div>
+      </div>
+      ${peachInsight({label:'AI insight',big:r.cheap_tier_pct+'%',desc:'of scope lookups resolved on the cheap local tier',sub:`Median ${Math.round(r.p50_latency_ms)} ms · ${Math.round(r.student_precision*100)}% precision · ${r.cost_reduction_pct}% lower serving cost than calling the frontier model on every lookup. The routing pays for itself.`})}
+    </div>
+
+    <div class="brief" id="briefCard" style="margin-top:16px">
+      <div style="display:flex;align-items:center;gap:8px"><span class="aipill"><span class="aidiamond">◆</span> Forte AI</span><b style="font-size:13.5px">Precon morning brief</b><span style="flex:1"></span><button class="ai sm" onclick="genBrief()"><span class="aidiamond" style="color:#fff">◆</span> Generate</button></div>
+      <div id="briefBody" class="muted" style="font-size:12.5px;margin-top:8px">Forte AI reads today's live desk — open solicitations, holds, availability, routing — and writes your brief with actions.</div>
+    </div>
+
+    <h2>Needs attention <span class="aipill"><span class="aidiamond">◆</span> AI</span> <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:400">the agent reviewed 100% of scope lines</span></h2>
+    <div class="insights">${(d.insights||[]).slice(0,4).map(insightCard).join('')||'<div class="empty"><div class="eh">All clear</div>No estimates need your attention.</div>'}</div>
+
+    <div class="card" style="margin-top:16px"><div class="ch"><h3>Backlog &amp; conversion forecast</h3><span class="sp"></span><span class="muted" style="font-size:12px">committed backlog · p10–p90 as open bids convert · illustrative</span></div>
+      ${lineChart({labels:months,series:[{name:'backlog',color:'#18181b',data:hist.concat(fcst)}],band:band,forecastFrom:hist.length,height:230})}</div>
+
+    <div class="row g2" style="margin-top:16px">
+      <div class="card"><div class="ch"><h3>Top vendors &amp; subs by committed value</h3></div>${hbars(Object.entries(d.by_vendor),{n:7})}</div>
+      <div class="card"><div class="ch"><h3>Value by division</h3></div>${donut(divs)}</div>
+    </div>
+
+    <h2>Recent estimates ${askLink('Summarize the recent estimates and what needs a decision.')}</h2><div id="ovtx"></div>`;
+  wireCoSearch('homeCoq','homeCoDD');
+  const ov=el('ovtx'); if(ov) ov.innerHTML=estTable(recent,'gest');
+}
+function decisionPill(dcs){return dcs==='auto_execute'?rb('low','submitted'):dcs==='review'?rb('medium','review'):rb('high','escalated');}
+function estTable(rows,id){
+  return grid(id||'gest',[
+    {key:'ref',label:'estimate',get:t=>t.ref,cell:t=>`<b>${esc(t.ref)}</b>`},
+    {key:'customer',label:'owner',get:t=>t.customer},
+    {key:'subject',label:'solicitation',get:t=>t.subject,cell:t=>`<span class="muted">${esc(t.subject)}</span>`},
+    {key:'decision',label:'decision',get:t=>t.decision,cell:t=>decisionPill(t.decision)},
+    {key:'subtotal',label:'subtotal',type:'num',align:'n',get:t=>t.subtotal,cell:t=>money(t.subtotal)},
+    {key:'margin',label:'margin',type:'num',align:'n',get:t=>t.blended_margin,cell:t=>pct(t.blended_margin)},
+    {key:'mwbe',label:'m/wbe',type:'num',align:'n',get:t=>t.mwbe_share,cell:t=>pct0(t.mwbe_share)},
+    {key:'cheap',label:'cheap tier',type:'num',align:'n',get:t=>t.cheap_tier_pct,cell:t=>t.cheap_tier_pct+'%'},
+  ],rows,{rowClick:t=>`openDesk(${q1(t.rfq_id)})`,file:'estimates',serverCsv:'/api/quotes.csv'});
+}
+function askData(q){openAI();setTimeout(()=>{const t=el('aiq');if(!t)return;t.value=q||'';if(q&&q.trim())aiStart();else t.focus();},80);}
+
+// ---------- morning brief (streams from Forte AI) ----------
+function genBrief(){const b=el('briefBody');if(!b)return;b.innerHTML='<span class="spin" style="padding:0">Forte AI is reading the live desk…</span>';
+  const es=new EventSource('/api/stream/ask?q='+encodeURIComponent('Give me the precon morning brief with actions.')+'&model='+encodeURIComponent(STATE.model));
+  let started=false;const on=(n,f)=>es.addEventListener(n,e=>f(JSON.parse(e.data)));
+  on('token',p=>{if(!started){started=true;b.className='';b.innerHTML='<div class="bt"></div>';}b.querySelector('.bt').textContent+=p.text;});
+  on('done',()=>{es.close();});on('failed',p=>{b.innerHTML='<span class="red">'+esc(p.message)+'</span>';es.close();});es.onerror=()=>es.close();}
+
+// ---------- Bid Desk ----------
+async function pgDesk(){
+  const g=navGen(); const rfqs=await jget('/api/rfqs'); if(!fresh(g))return;
+  const cards=rfqs.map(r=>{const hold=r.credit_status==='hold'?rb('high','bid hold'):'';
+    return `<div class="rfq ${STATE.current===r.id?'active':''}" data-id="${r.id}" onclick="runRFQ(${q1(r.id)})">
+      <div class="top"><span class="cust">${esc(r.customer)}</span><span class="tag">tier ${esc(r.tier)}</span>${hold}</div>
+      <div class="subj">${esc(r.subject)}</div><div class="hl">${esc(r.headline)}</div>
+      <div class="meta"><span class="token" style="font-size:11px">${esc(r.id)}</span><span>${r.n_lines} lines · ${esc(r.received_at)}</span></div></div>`;}).join('');
+  view().innerHTML=`<p class="lede">The agent reads an inbound solicitation and <b>executes</b> the whole precon workflow: identify scope, check availability, propose alternates, price to the owner's rate schedule, clear the guardrails, then submit the estimate or escalate. Pick a solicitation to watch it run live.</p>
+    <div class="qd"><div class="inbox"><h2 style="margin:4px 0 10px">Bid inbox · ${rfqs.length} open</h2>${cards}</div>
+    <div id="runwrap"><div class="card"><div class="runempty"><div class="big">▶</div><div style="font-weight:600;color:var(--ink);font-size:15px;margin-bottom:5px">Select a solicitation to run the Bid Desk</div><div>You'll see every step execute live. The same generator that streams here also produces the cached estimate.</div></div></div></div></div>`;
+  if(STATE.current)runRFQ(STATE.current);
+}
+function runRFQ(id){
+  if(STATE.stream){STATE.stream.close();STATE.stream=null;}
+  STATE.current=id;
+  document.querySelectorAll('.inbox .rfq').forEach(x=>x.classList.toggle('active',x.dataset.id===id));
+  const w=el('runwrap'); if(!w) return;
+  const steps={};
+  w.innerHTML=`
+    <div id="decisionSlot"></div>
+    <div class="kpis" id="kpis" style="margin-bottom:16px"></div>
+    <div class="row g2" style="grid-template-columns:1fr 1fr">
+      <div class="card"><div class="ch"><h3>Execution trace</h3><span class="sp"></span><span class="muted" style="font-size:12px" id="traceStatus"><span class="spin" style="padding:0">running…</span></span></div><div class="xtrace" id="trace"></div></div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card"><div class="ch"><h3>Submission guardrails</h3><span class="sp"></span><span class="muted" style="font-size:12px">safe-to-submit gate</span></div><div class="guards" id="guards"><div class="muted" style="font-size:12px">Pending resolution…</div></div></div>
+        <div class="card" id="findPanel" style="display:none"><div class="ch"><h3>What the agent noticed</h3></div><div class="guards" id="findings"></div></div>
+      </div>
+    </div>
+    <h2 style="margin-top:18px">Resolved scope lines <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:400" id="lineSub"></span></h2>
+    <div class="tablewrap" style="max-height:none"><table><thead><tr><th>Scope line</th><th>Assembly</th><th>Tier</th><th class="n">Qty</th><th class="n">Net rate</th><th class="n">Extended</th><th class="n">Margin</th></tr></thead><tbody id="lines"></tbody></table></div>
+    <div id="emailPanel" style="display:none;margin-top:16px" class="card"><div class="ch"><h3 id="emailTitle">Proposal letter</h3><span class="sp"></span><span class="muted" style="font-size:12px" id="emailSub"></span></div><pre class="emailbody" id="email"></pre></div>`;
+  const trace=el('trace'), guardBox=el('guards');
+  const kpi=(k,val,cls,s)=>{const c=mk('div','kpi2'+(cls?' '+cls:''));c.innerHTML=`<div class="k">${k}</div><div class="v">${val}</div>${s?`<div class="s">${s}</div>`:''}`;return c;};
+  const S=new EventSource('/api/stream/quote?rfq='+encodeURIComponent(id)); STATE.stream=S;
+  const ev=(name,fn)=>S.addEventListener(name,e=>fn(JSON.parse(e.data)));
+  ev('step',p=>{let node=steps[p.id];if(!node){node=mk('div','tev');trace.appendChild(node);steps[p.id]=node;}
+    node.className='tev '+(p.status==='done'?'done':'run');node.innerHTML=`<span class="lab">${esc(p.label)}</span><span class="st">${esc(p.status)}</span>`;});
+  ev('resolve',p=>{const tb=el('lines');const tr=mk('tr','flash');const part=p.part||{};const finalSku=p.final_sku||part.sku;
+    const sub=p.substituted?`<div class="muted" style="font-size:10.5px">↳ alternate for ${esc(p.orig_sku)}</div>`:'';
+    tr.innerHTML=`<td class="wrap">${esc(p.raw)}<div class="muted" style="font-size:11px">${esc(p.rationale)}</div></td><td><span class="mono">${esc(finalSku||'—')}</span>${sub}</td><td><span class="tierbadge ${p.tier}">${p.tier}</span></td><td class="n">${p.qty.toLocaleString()}</td><td class="n">—</td><td class="n">—</td><td class="n">—</td>`;
+    tr.dataset.sku=finalSku||'';tb.appendChild(tr);});
+  ev('cell',p=>{[...el('lines').children].forEach(tr=>{if(tr.dataset.sku===p.sku){const tds=tr.querySelectorAll('td');tds[4].textContent=money2(p.net_price);tds[5].textContent=money(p.extended);tds[6].innerHTML=pct(p.margin)+(p.thin?' '+rb('high','thin'):'');}});});
+  ev('metric',p=>{const box=el('kpis');const cls=p.flag==='danger'?'danger':(p.key==='cheap_tier'?'hero':'');
+    let val=p.unit==='$'?money(p.value):p.unit==='%'?p.value+'%':p.value+(p.unit?(' '+p.unit):'');box.appendChild(kpi(p.label,val,cls));});
+  ev('guard',p=>{if(guardBox.querySelector('.muted'))guardBox.innerHTML='';const icon={pass:'✓',warn:'!',block:'✕'}[p.status];
+    const gd=mk('div','guard '+p.status+' flash');gd.innerHTML=`<div class="gi">${icon}</div><div><div class="gl">${esc(p.label)}</div><div class="gd">${esc(p.detail)}</div>${p.evidence?`<div class="ge">${esc(p.evidence)}</div>`:''}</div>`;guardBox.appendChild(gd);});
+  ev('finding',p=>{el('findPanel').style.display='';const col={high:'var(--crit)',medium:'var(--amber)',low:'var(--muted)'}[p.severity]||'var(--muted)';
+    const f=mk('div','guard flash');f.innerHTML=`<div class="gi" style="background:${col}">◆</div><div><div class="gl">${esc(p.text)}</div><div class="gd">${esc(p.detail)}</div>${p.evidence?`<div class="ge">${esc(p.evidence)}</div>`:''}</div>`;el('findings').appendChild(f);});
+  ev('action',p=>{el('emailPanel').style.display='';el('emailTitle').textContent=p.kind==='executed'?'Submitted to owner (proposal letter)':'Held: proposal letter + escalation';el('emailSub').textContent=p.kind==='executed'?('written to '+p.system):('routed to '+p.system);el('email').textContent=p.email||'';});
+  ev('result',p=>{renderDecision(p);el('lineSub').textContent=p.lines.length+' lines · '+money(p.subtotal)+' subtotal';});
+  ev('done',p=>{el('traceStatus').innerHTML='✓ '+p.decision.replace('_',' ')+' · '+p.elapsed_ms+' ms';S.close();STATE.stream=null;refreshTasks();});
+  ev('failed',p=>{el('traceStatus').innerHTML=rb('high','failed');});
+  S.onerror=()=>{if(STATE.stream===S){S.close();STATE.stream=null;}};
+}
+function renderDecision(q){
+  const slot=el('decisionSlot'); if(!slot) return;
+  const map={auto_execute:['exec','✓','Auto-submitted','The agent submitted the estimate. All guardrails clear.'],
+    review:['review','!','Prepared for review','Ready, with items to confirm before release.'],
+    escalate:['escalate','✕','Escalated to the chief estimator','Held. A guardrail blocked autonomous submission.']};
+  const [cls,icn,t]=map[q.decision]||map.escalate;
+  slot.innerHTML=`<div class="decision ${cls}"><div class="ic">${icn}</div>
+    <div style="flex:1"><div class="t">${t} · ${esc(q.ref)}</div><div class="s">${esc(q.verdict.summary)}</div></div>
+    <div style="text-align:right"><div style="font-size:20px;font-weight:700;letter-spacing:-.4px">${money(q.subtotal)}</div>
+    <div class="muted" style="font-size:11px">blended ${pct(q.blended_margin)} · M/WBE ${pct0(q.mwbe_share||0)} · ${q.routing.cheap_tier_pct}% cheap tier</div></div></div>`;
+}
+
+// ---------- Forte AI: shared streaming chat ----------
+function askStream(question, chatEl, opts){opts=opts||{};
+  chatEl.appendChild(mk('div','bubble you',`<div class="who">You</div>${esc(question)}`));
+  const ai=mk('div','bubble aib'); ai.innerHTML='<div class="who">◆ Forte AI</div><span class="body muted" style="font-size:11px"></span><span class="cursor"></span>';
+  chatEl.appendChild(ai); chatEl.scrollTop=chatEl.scrollHeight; if(opts.scrollBody)opts.scrollBody.scrollTop=opts.scrollBody.scrollHeight;
+  const body=ai.querySelector('.body');
+  const es=new EventSource('/api/stream/ask?q='+encodeURIComponent(question)+'&model='+encodeURIComponent(STATE.model));
+  const on=(n,f)=>es.addEventListener(n,e=>f(JSON.parse(e.data)));
+  on('step',p=>{if(!body.dataset.started)body.textContent=p.label+(p.status==='running'?'…':'');});
+  on('token',p=>{if(!body.dataset.started){body.dataset.started='1';body.textContent='';body.className='body';}body.textContent+=p.text;chatEl.scrollTop=chatEl.scrollHeight;if(opts.scrollBody)opts.scrollBody.scrollTop=opts.scrollBody.scrollHeight;});
+  on('sources',p=>{if(p.items&&p.items.length){const s=mk('div','srcs');p.items.forEach(x=>s.innerHTML+=`<span class="srcchip ${x.kind}"><span class="sk"></span>${esc(x.label)}</span>`);ai.appendChild(s);}});
+  on('done',()=>{const c=ai.querySelector('.cursor');if(c)c.remove();es.close();refreshTasks();if(opts.onDone)opts.onDone();});
+  on('failed',p=>{body.className='body';body.textContent=p.message||'error';const c=ai.querySelector('.cursor');if(c)c.remove();es.close();if(opts.onDone)opts.onDone();});
+  es.onerror=()=>{const c=ai.querySelector('.cursor');if(c)c.remove();es.close();if(opts.onDone)opts.onDone();};
+}
+async function pgAsk(){
+  const g=navGen(); const [o,sgs]=await Promise.all([jget('/api/overview'),jget('/api/ask/suggestions')]); if(!fresh(g))return;
+  view().innerHTML=`<p class="lede">A grounded assistant over ${esc(o.company)}'s live desk: the cost library, availability, owners, the estimates the agent ran, policy, and the routing engine. Claude answers when a key is set; it stays deterministic and grounded offline.</p>
+    <div class="card" style="max-width:820px;padding:0;overflow:hidden">
+      <div style="padding:20px 20px 16px;background:linear-gradient(160deg,#fff 40%,#f1f6ff);border-bottom:1px solid var(--aibd)"><div style="font-size:20px;font-weight:500;color:var(--ink2);letter-spacing:-.4px;line-height:1.3">${greet()},<br><b style="color:var(--ink);font-weight:700">what should Forte AI look into?</b></div></div>
+      <div class="chat" id="chat_full" style="padding:16px 18px;min-height:340px;max-height:56vh">
+        <div class="bubble aib"><div class="who">◆ Forte AI</div>Ask me anything about the desk: the cost library, availability, an owner's standing, the routing engine, or <b>why an estimate submitted or escalated</b>. Answers are grounded in the live data.</div>
+      </div>
+      <div class="askchips" style="padding:2px 18px 14px;margin-top:0" id="sg_full">${(sgs||[]).map(s=>`<span onclick="askFull(${q1(s)})">💡 ${esc(s)}</span>`).join('')}</div>
+      <div class="askbar" style="margin:0 16px 16px"><span class="aidiamond" style="font-size:16px">◆</span><input id="ai_full" placeholder="Ask anything…" onkeydown="if(event.key==='Enter')askFull(this.value)"><button class="ai sm" onclick="askFull(el('ai_full').value)">Ask</button></div>
+    </div>`;
+}
+function greet(){const h=new Date().getHours();return h<12?'Good morning':h<18?'Good afternoon':'Good evening';}
+function askFull(q){q=(q||'').trim();if(!q)return;const i=el('ai_full');if(i)i.value='';askStream(q,el('chat_full'));}
+
+// ---------- Model Routing ----------
+async function pgRouting(){
+  const g=navGen(); const r=await jget('/api/routing'); if(!fresh(g))return;
+  const R=r.routed,T=r.teacher_only,S=r.savings;
+  const curve=r.calibration.curve.filter((_,i)=>i%3===0);
+  view().innerHTML=`<p class="lede">The engineering heart. A distilled <b>MiniLM (BERT)</b> student resolves the clean majority of scope lookups on-box for ~$0; only the ambiguous tail escalates to the frontier-model <b>teacher</b> (Claude), which also sees the owner's project history. Heavy reasoning in the cloud, lightweight matching at the edge. <span class="muted">Student: ${esc(r.student?r.student.model:'')}</span></p>
+    <div class="strip">
+      ${stat('Resolved on cheap tier',R.cheap_tier_pct+'%',{hero:true,sub:R.escalation_pct+'% escalate to the teacher'})}
+      ${stat('Student precision',pct(R.student_precision),{sub:'correct when it doesn\'t escalate'})}
+      ${stat('Median latency',Math.round(R.p50_latency_ms)+' ms',{sub:'vs '+Math.round(T.p50_latency_ms)+' ms teacher-only'})}
+      ${stat('Serving cost / 1k','$'+R.cost_per_1k_usd,{sub:'vs $'+T.cost_per_1k_usd+' teacher-only'})}
+    </div>
+    <div class="card" style="margin-top:16px"><div class="ch"><h3>Routed system vs. teacher-on-everything</h3><span class="sp"></span><span class="muted" style="font-size:12px">${r.dataset.queries} queries · ${r.dataset.skus} assemblies</span><button class="sm" onclick="recomputeRouting()">↻ Recompute</button></div>
+      <div class="comp">
+        <div class="compcol win"><h4>◆ Routed (student → teacher)</h4>
+          <div class="crow"><span>System accuracy</span><span class="m">${pct(R.system_accuracy)}</span></div>
+          <div class="crow"><span>Cheap-tier coverage</span><span class="m">${R.cheap_tier_pct}%</span></div>
+          <div class="crow"><span>Cost / 1k queries</span><span class="m">$${R.cost_per_1k_usd}</span></div>
+          <div class="crow"><span>Median latency</span><span class="m">${Math.round(R.p50_latency_ms)} ms</span></div>
+          <div class="crow"><span>p95 latency</span><span class="m">${Math.round(R.p95_latency_ms)} ms</span></div></div>
+        <div class="compcol"><h4>Teacher on everything</h4>
+          <div class="crow"><span>System accuracy</span><span class="m">${pct(T.system_accuracy)}</span></div>
+          <div class="crow"><span>Cheap-tier coverage</span><span class="m">0%</span></div>
+          <div class="crow"><span>Cost / 1k queries</span><span class="m">$${T.cost_per_1k_usd}</span></div>
+          <div class="crow"><span>Median latency</span><span class="m">${Math.round(T.p50_latency_ms)} ms</span></div>
+          <div class="crow"><span>p95 latency</span><span class="m">${Math.round(T.p95_latency_ms)} ms</span></div></div>
+      </div>
+      <div class="callout"><b>${S.cost_reduction_pct}% lower serving cost</b> and a <b>~${S.latency_speedup_x}× faster median</b> at equal accuracy, so the routing pays for itself. Threshold calibrated at conf ≥ ${r.calibration.threshold} to hold student precision ≥ ${pct(r.calibration.target_precision)}. Every number is computed by <span class="mono">distill.py</span> over the cost library, not asserted.</div>
+    </div>
+    <div class="card" style="margin-top:16px"><div class="ch"><h3>Calibration: coverage vs. precision</h3><span class="sp"></span><span class="muted" style="font-size:12px">where to trust the student</span></div>
+      <div class="barwrap">${curve.map(pt=>{const sel=pt.t===r.calibration.threshold;return `<div class="bar"><div class="fill" style="width:${(pt.coverage*100).toFixed(0)}%;${pt.precision>=r.calibration.target_precision?'':'opacity:.45'}"></div><div class="lbl">conf ≥ ${pt.t}${sel?' ◄ chosen':''}</div><div class="val">${(pt.coverage*100).toFixed(0)}% covered · ${pct(pt.precision)} precise</div></div>`;}).join('')}</div></div>
+    ${(r.misses&&r.misses.length)?`<h2>Where the student escalates <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:400">genuinely ambiguous queries the teacher resolves</span></h2><div class="tablewrap"><table><tr><th>query</th><th>student picked</th><th>gold</th><th class="n">conf</th></tr>${r.misses.map(m=>`<tr><td>${esc(m.query)}</td><td class="mono">${esc(m.pred)}</td><td class="mono">${esc(m.gold)}</td><td class="n">${m.conf}</td></tr>`).join('')}</table></div>`:''}`;
+}
+
+// ---------- Playbook ----------
+async function pgBrain(){
+  const g=navGen(); const b=await jget('/api/brain'); if(!fresh(g))return;
+  const p=b.policies;
+  view().innerHTML=`<p class="lede">The company-specific memory the agent acts on: rate tiers, the alternates policy, guardrail thresholds, and scope synonyms it has <b>learned from estimator feedback</b>. Edit a policy and the next run behaves differently; teach it a phrase and that line stops escalating.</p>
+    <div class="row g2" style="grid-template-columns:1fr 1fr">
+      <div class="card"><div class="ch"><h3>Policies &amp; guardrail thresholds</h3><span class="sp"></span><span class="muted" style="font-size:12px">drives the submission gate</span><button class="sm" id="resetBtn">Reset</button></div><div id="polRows"></div></div>
+      <div class="card"><div class="ch"><h3>Teach it once · the learning loop</h3><span class="sp"></span><span class="muted" style="font-size:12px">feedback → Playbook</span></div>
+        <div class="note" style="margin-bottom:12px">A vague line like <i>"the canopy extension we always spec"</i> escalates to the teacher the first time. Confirm what it means once and it's written to the Playbook as an MTA-scoped synonym, so the next run resolves it instantly on the free memory tier.</div>
+        <button class="primary" id="demoBtn">▶ Run the before / after</button><div id="demoOut" style="margin-top:14px"></div></div>
+    </div>
+    <div class="row g2" style="grid-template-columns:1fr 1fr;margin-top:16px">
+      <div class="card"><div class="ch"><h3>Owner rate tiers</h3></div>${Object.entries(b.contract_tiers).map(([k,v])=>`<div class="editrow"><div class="lab"><b>Tier ${esc(k)}</b><div class="d">${k==='A'?'term contract / IDIQ':k==='B'?'design-build negotiated':'lump-sum public bid'}</div></div><span class="token">−${Math.round(v*100)}% off schedule</span></div>`).join('')}
+        <h3 style="margin-top:16px">Alternates policy</h3>${Object.entries(b.substitutions).map(([k,v])=>`<div class="editrow"><div class="lab"><b class="mono">${esc(k)} → ${esc(v.to)}</b><div class="d">${esc(v.reason)}</div></div></div>`).join('')||'<div class="muted">none</div>'}</div>
+      <div class="card"><div class="ch"><h3>Learned synonyms &amp; owner language</h3></div>
+        ${Object.entries(b.synonyms).map(([k,v])=>`<div class="editrow"><div class="lab"><b>"${esc(k)}"</b><div class="d">→ ${esc(v)} · global</div></div>${rb('low','memory')}</div>`).join('')}
+        ${Object.entries(b.customer_prefs).map(([k,v])=>`<div class="editrow"><div class="lab"><b>${esc(k.split('::')[0])}</b><div class="d">"${esc(k.split('::')[1])}" → ${esc(v)}</div></div>${rb('blue','owner-scoped')}</div>`).join('')||'<div class="muted" style="margin-top:8px;font-size:12.5px">No owner-scoped phrases yet — run the loop on the right.</div>'}
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)"><h3>Teach a phrase</h3>
+          <div class="filters" style="margin:0"><select id="tOwner"></select><input class="t" id="tPhrase" placeholder="the phrase the owner uses" style="flex:1;min-width:180px"><input class="t" id="tSku" placeholder="assembly code" style="width:150px"><button class="primary sm" id="teachBtn">Teach</button></div>
+          <div class="muted" id="teachMsg" style="font-size:12px;margin-top:6px"></div></div></div>
+    </div>`;
+  const rows=el('polRows');
+  rows.appendChild(policyRow('margin_floor','Blended margin floor','Escalate any estimate whose blended margin falls below this.',p.margin_floor));
+  rows.appendChild(policyRow('line_margin_hard_floor','Per-line hard floor','No single line may be priced below this margin.',p.line_margin_hard_floor));
+  rows.appendChild(policyRow('substitution_price_tolerance','Alternates tolerance','Swaps beyond this rate delta need confirmation.',p.substitution_price_tolerance));
+  rows.appendChild(policyRow('mwbe_goal','M/WBE participation goal','Public-owner bids under this certified-vendor share are flagged for review.',p.mwbe_goal||0));
+  rows.appendChild(toggleRow('block_on_credit_hold','Block on owner hold','Never auto-submit to an owner on a prequalification or bonding hold.',p.block_on_credit_hold));
+  el('resetBtn').onclick=async()=>{await jpost('/api/brain/reset');openPage('brain');};
+  el('demoBtn').onclick=async()=>{el('demoBtn').disabled=true;el('demoOut').innerHTML='<span class="spin">teaching…</span>';
+    try{const r=await jpost('/api/brain/demo');
+      el('demoOut').innerHTML=`<div class="comp">
+        <div class="compcol"><h4>Before feedback</h4><div class="crow"><span>Tier</span><span class="m"><span class="tierbadge ${r.before.tier}">${r.before.tier}</span></span></div><div class="crow"><span>Latency</span><span class="m">${r.before.latency_ms} ms</span></div><div class="crow"><span>Resolved</span><span class="m mono">${esc(r.before.sku||'—')}</span></div></div>
+        <div class="compcol win"><h4>After feedback</h4><div class="crow"><span>Tier</span><span class="m"><span class="tierbadge ${r.after.tier}">${r.after.tier}</span></span></div><div class="crow"><span>Latency</span><span class="m">${r.after.latency_ms} ms</span></div><div class="crow"><span>Resolved</span><span class="m mono">${esc(r.after.sku||'—')}</span></div></div></div>
+        <div class="callout">Taught <b>"${esc(r.taught.phrase)}"</b> → ${esc(r.taught.sku)} for ${esc(r.taught.customer_id)}. Escalation removed: <b>${r.improvement.escalation_removed}</b>. (The demo resets itself so it stays repeatable.)</div>`;
+      setTimeout(()=>jpost('/api/brain/reset'),50);
+    }catch(e){el('demoOut').innerHTML='<span class="red">'+esc(String(e))+'</span>';}
+    el('demoBtn').disabled=false;};
+  try{const cs=await jget('/api/customers');el('tOwner').innerHTML=cs.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');}catch(e){}
+  el('teachBtn').onclick=async()=>{try{const r=await jpost('/api/brain/teach',{customer_id:el('tOwner').value,phrase:el('tPhrase').value,sku:el('tSku').value.trim().toUpperCase(),scope:'customer'});
+      el('teachMsg').innerHTML=`✓ Taught. Before: <b>${r.before.tier}</b> → after: <b>${r.after.tier}</b>. Cached estimates were dropped so the next run reflects it.`;setTimeout(()=>openPage('brain'),900);}
+    catch(e){el('teachMsg').innerHTML='<span class="red">'+esc(String(e))+'</span>';}};
+}
+function policyRow(key,title,d,val){
+  const row=mk('div','editrow');
+  row.innerHTML=`<div class="lab"><b>${title}</b><div class="d">${d}</div></div><input type="number" step="0.01" min="0" max="1" value="${val}"><span class="muted" style="font-size:11px">fraction</span>`;
+  const inp=row.querySelector('input');
+  inp.onchange=async()=>{await jpost('/api/brain/policy',{key,value:parseFloat(inp.value)});inp.classList.add('flash');refreshTasks();};
+  return row;
+}
+function toggleRow(key,title,d,on){
+  const row=mk('div','editrow');
+  row.innerHTML=`<div class="lab"><b>${title}</b><div class="d">${d}</div></div><div class="toggle${on?' on':''}"><div class="k"></div></div>`;
+  const t=row.querySelector('.toggle');
+  t.onclick=async()=>{const nv=!t.classList.contains('on');t.classList.toggle('on',nv);await jpost('/api/brain/policy',{key,value:nv});refreshTasks();};
+  return row;
+}
+
+// ---------- Connectors ----------
+async function pgConnectors(){
+  const g=navGen(); const r=await jget('/api/connectors'); if(!fresh(g))return;
+  view().innerHTML=`<p class="lede">The agent plugs into the systems Forte already runs — the estimating inbox, the cost library, the yard and sub bench, the owner CRM — with no rip-and-replace. In the demo every source is synthetic; the production path is the same interface behind Procore / Sage 300 CRE / PASSPort, and the agent never changes.</p>
+    <div class="cards">${r.connectors.map(c=>`<div class="card ccard"><div class="ct">${esc(c.name)} ${c.status==='connected'?rb('low','● connected'):rb('gray','swap-in')}</div><div class="cv">${esc(c.vendor)}</div><div class="cd">${esc(c.provides)}</div>${c.detail?`<div class="muted" style="font-size:11.5px;margin-top:9px">${esc(c.detail)}</div>`:''}</div>`).join('')}</div>
+    <h2>Owners on file</h2><div id="owners"><div class="spin">loading…</div></div>`;
+  const cs=await jget('/api/customers'); if(!fresh(g))return;
+  el('owners').innerHTML=grid('gowners',[
+    {key:'name',label:'owner',get:c=>c.name,cell:c=>`<b>${esc(c.name)}</b><div class="muted" style="font-size:11px">${esc(c.contact)}</div>`},
+    {key:'tier',label:'rate tier',get:c=>c.tier,cell:c=>`tier ${c.tier} <span class="muted">−${Math.round(c.discount*100)}%</span>`},
+    {key:'standing',label:'standing',get:c=>c.credit_status,cell:c=>c.credit_status==='hold'?rb('high','bid hold'):rb('low','clear')},
+    {key:'terms',label:'terms',get:c=>c.terms},
+    {key:'goal',label:'m/wbe goal',type:'num',align:'n',get:c=>c.mwbe_goal,cell:c=>c.mwbe_goal?pct0(c.mwbe_goal):'—'},
+    {key:'hist',label:'history',type:'num',align:'n',get:c=>c.history.length,cell:c=>c.history.length+' lines'},
+    {key:'note',label:'note',get:c=>c.note,wrap:true,cell:c=>`<span class="muted" style="font-size:12px">${esc(c.note)}</span>`},
+  ],cs,{file:'owners',noexport:true});
+}
+
+// ---------- Cost Library ----------
+async function pgCatalog(){
+  const g=navGen(); const r=await jget('/api/catalog'); if(!fresh(g))return;
+  const f=STATE.catFilter||''; STATE.catFilter='';
+  const oos=r.parts.filter(x=>x.on_hand===0).length;
+  view().innerHTML=kpis([['Assemblies',r.parts.length],['Divisions',r.categories.length],['Locations',r.warehouses.length],['Unavailable',oos,oos?'':'hero',oos?'danger':'']])+
+    `<div class="filters" style="margin-top:14px"><input class="t" id="catq" placeholder="search assembly / vendor / code" style="width:240px" value="${esc(f)}"><select id="catdiv"><option value="">All divisions</option>${r.categories.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('')}</select><label><input type="checkbox" id="catoos"> unavailable only</label><span style="flex:1"></span><span class="muted" style="font-size:12px">${r.warehouses.map(esc).join(' · ')}</span></div><div id="cattable"></div>`;
+  const paint=()=>{const q=el('catq').value.trim().toLowerCase(),dv=el('catdiv').value,oo=el('catoos').checked;
+    const rows=r.parts.filter(x=>(!q||`${x.sku} ${x.name} ${x.brand} ${x.category}`.toLowerCase().includes(q))&&(!dv||x.category===dv)&&(!oo||x.on_hand===0));
+    el('cattable').innerHTML=grid('gcat',[
+      {key:'sku',label:'code',get:x=>x.sku,cell:x=>`<span class="mono">${esc(x.sku)}</span>`},
+      {key:'name',label:'assembly',get:x=>x.name,cell:x=>`${esc(x.name)}<div class="muted" style="font-size:11px">${esc(x.brand)}${x.mwbe?' · '+rb('blue',x.mwbe):''}</div>`},
+      {key:'category',label:'division',get:x=>x.category},
+      {key:'uom',label:'uom',get:x=>x.uom},
+      {key:'cost',label:'cost',type:'num',align:'n',get:x=>x.unit_cost,cell:x=>money2(x.unit_cost)},
+      {key:'rate',label:'schedule rate',type:'num',align:'n',get:x=>x.list_price,cell:x=>money2(x.list_price)},
+      {key:'on_hand',label:'available',type:'num',align:'n',get:x=>x.on_hand,cell:x=>x.on_hand>0?x.on_hand.toLocaleString():rb('high','0')},
+      {key:'status',label:'status',get:x=>x.status,cell:x=>x.status==='active'?rb('low','active'):rb('medium','discontinued')},
+    ],rows,{file:'cost-library',sort:{key:'category',dir:'asc'}});};
+  el('catq').oninput=paint;el('catdiv').onchange=paint;el('catoos').onchange=paint;paint();
+}
+
+// ---------- Runs ----------
+async function pgRuns(){
+  const g=navGen(); const r=await jget('/api/runs'); if(!fresh(g))return;
+  view().innerHTML=`<p class="lede">Every Bid Desk run this session — estimates executed or escalated, and Forte AI questions answered. Session-local; it resets on restart.</p>`+
+    (r.length?grid('gruns',[
+      {key:'ref',label:'ref',get:x=>x.ref||x.label,cell:x=>`<b>${esc(x.ref||x.label)}</b>`},
+      {key:'workflow',label:'workflow',get:x=>x.workflow},
+      {key:'company',label:'owner / context',get:x=>x.company},
+      {key:'decision',label:'decision',get:x=>x.decision||x.status,cell:x=>x.decision?decisionPill(x.decision):rb('gray',x.status)},
+      {key:'cost',label:'teacher cost',type:'num',align:'n',get:x=>x.cost_usd||0,cell:x=>'$'+(x.cost_usd||0).toFixed(4)},
+      {key:'ts',label:'when',type:'num',align:'n',get:x=>x.ts,cell:x=>new Date(x.ts*1000).toLocaleTimeString()},
+    ],r,{file:'runs',sort:{key:'ts',dir:'desc'}}):'<div class="empty"><div class="eh">No runs yet</div>Run a solicitation from the Bid Desk or ask Forte AI a question.</div>');
+}
+
+// ---------- Creator ----------
+function pgCreator(){
+  const links=[['Portfolio','https://harshinivijay.com'],['LinkedIn','https://www.linkedin.com/in/harshini-vijayakumar/'],['GitHub','https://github.com/harshini2212'],['Devpost','https://devpost.com/hv2201'],['X / Twitter','https://x.com/highnoon212'],['Email','mailto:hv2201@nyu.edu']]
+    .map(([l,u])=>`<a href="${u}" target="_blank" rel="noopener" class="chip" style="text-decoration:none">${esc(l)} ↗</a>`).join('');
+  const chips=items=>items.map(s=>`<span class="tag" style="display:inline-block;margin:2px">${esc(s)}</span>`).join('');
+  view().innerHTML=`<div class="row g2" style="grid-template-columns:300px 1fr;align-items:start">
+    <div class="card" style="text-align:center">
+      <div style="width:124px;height:124px;margin:8px auto 14px"><img src="https://harshinivijay.com/images/about.jpg" alt="Harshini Vijaya Kumar" referrerpolicy="no-referrer" style="width:124px;height:124px;border-radius:50%;object-fit:cover;box-shadow:var(--sh2)" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+        <div style="display:none;width:124px;height:124px;border-radius:50%;background:var(--peach);color:#5b2b12;align-items:center;justify-content:center;font-size:40px;font-weight:700;letter-spacing:-1px">HV</div></div>
+      <div style="font-size:19px;font-weight:700;letter-spacing:-.4px">Harshini Vijaya Kumar</div>
+      <div class="muted" style="font-size:12.5px;margin-top:3px">AI / ML Engineer · Researcher · 5× Hackathon Winner</div>
+      <div class="chips" style="justify-content:center;margin-top:15px">${links}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card"><div class="ch"><h3>About</h3></div><div style="font-size:13.5px;line-height:1.65;color:var(--ink2)">MS Computer Engineering at NYU, focused on large language models, agentic systems, and production-grade architecture. I'm a 3-time Model UN Best Delegate winner with two honorable mentions, and I love fast-paced, high-ownership environments. I'm drawn to problems where an AI has to <i>act</i>, not just answer, which is exactly what this project explores: autonomous estimating where a wrong submission can't ship, so every step clears a guardrail before it executes.</div></div>
+      <div class="card"><div class="ch"><h3>Skills</h3></div>
+        <h2 style="margin:0 0 7px">AI / ML</h2><div style="margin-bottom:13px">${chips(['LLMs','Agents & tool-use','Model distillation','LoRA fine-tuning','RAG','NLP','MLOps'])}</div>
+        <h2 style="margin:0 0 7px">Languages</h2><div style="margin-bottom:13px">${chips(['Python','JavaScript','TypeScript','React','Node.js','Java','C++'])}</div>
+        <h2 style="margin:0 0 7px">Data &amp; Infrastructure</h2><div>${chips(['Kubernetes','Docker','PostgreSQL','BigQuery','Kafka','AWS','FastAPI','TensorFlow','PyTorch'])}</div></div>
+      <div class="card"><div class="ch"><h3>Why I built this for Forte</h3><span class="sp"></span><span class="muted" style="font-size:12px">what motivated me</span></div><div style="font-size:12.5px;line-height:1.65;color:var(--ink2)">Forte modernizes the transit stations and public buildings New York runs on, and precon is where every one of those projects starts. The Bid Desk is an AI teammate for that desk: it reads a messy solicitation, resolves the scope to the cost library, prices to the owner's schedule, and clears its guardrails — margin floors, owner standing, M/WBE goals — before it submits, so it executes real estimating work without ever shipping a wrong number.</div></div>
+    </div></div>`;
+}
+
+// ---------- AI assistant drawer ----------
+function openAI(){ el('aiCtx').textContent='· '+(PAGES[STATE.page]?.title||''); el('ai').classList.add('open');
+  if(!el('aiconv')){el('aiBody').innerHTML=`<div class="starter"><textarea id="aiq" placeholder="ask Forte AI about the desk…"></textarea><button class="ai" id="aigo">Run</button></div><div id="aiconv" class="chat"></div>`;
+    el('aigo').onclick=aiStart; el('aiq').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();aiStart();}});}
+  el('aiq').focus(); }
+function closeAI(){ el('ai').classList.remove('open'); }
+function aiStart(){ const q=el('aiq').value.trim(); if(!q)return; el('aiq').value=''; el('aigo').disabled=true;
+  askStream(q, el('aiconv'), {scrollBody:el('aiBody'), onDone:()=>{el('aigo').disabled=false;}}); }
+// ---------- modal ----------
+function showModal(html){ el('modalHost').innerHTML=`<div class="modal" onclick="if(event.target===this)closeModal()"><div class="box">${html}</div></div>`; }
+function closeModal(){ el('modalHost').innerHTML=''; }
+boot();
+</script>
+</body>
+</html>
