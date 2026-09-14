@@ -40,12 +40,16 @@ _CONNECTORS = [
 
 
 def _all_quotes() -> list:
+    """Every estimate, materialized. Runs the (offline, sub-second) worker for any
+    bid whose cache was dropped by a Playbook edit, so the Home page never goes
+    empty after a policy change or a taught phrase."""
     d = company()
     out = []
     for r in d.rfqs:
-        p = _CACHE / f"quote_{r.id}.json"
-        if p.exists():
-            out.append(json.loads(p.read_text(encoding="utf-8")))
+        try:
+            out.append(quote(r.id))
+        except Exception:
+            pass
     return out
 
 

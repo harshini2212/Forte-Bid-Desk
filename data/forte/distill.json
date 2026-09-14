@@ -221,9 +221,9 @@
     "student_precision": 1.0,
     "system_accuracy": 0.999,
     "cost_per_1k_usd": 0.5729,
-    "p50_latency_ms": 21.027,
-    "p95_latency_ms": 45.434,
-    "student_p50_ms": 20.471
+    "p50_latency_ms": 39.518,
+    "p95_latency_ms": 153.838,
+    "student_p50_ms": 38.996
   },
   "teacher_only": {
     "system_accuracy": 0.98,
@@ -233,7 +233,7 @@
   },
   "savings": {
     "cost_reduction_pct": 94.8,
-    "latency_speedup_x": 152.2
+    "latency_speedup_x": 81.0
   },
   "misses": [
     {

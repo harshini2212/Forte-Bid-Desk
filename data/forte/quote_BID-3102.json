@@ -1,0 +1,181 @@
+{
+  "ref": "EST-3102",
+  "rfq_id": "BID-3102",
+  "subject": "PS 118 addition \u00b7 masonry, doors, curtain wall",
+  "customer": {
+    "id": "OWN-SCA",
+    "name": "NYC School Construction Authority",
+    "contact": "Marcus Lee, Procurement",
+    "email": "m.lee@nycsca.example",
+    "tier": "A",
+    "terms": "Net 45 \u00b7 5% retainage",
+    "credit_status": "ok",
+    "mwbe_goal": 0.3
+  },
+  "headline": "Term-contract owner: a discontinued spec to swap, and a deep negotiated rate that tests the margin floor.",
+  "lines": [
+    {
+      "raw": "2400 sf 8in reinforced CMU wall",
+      "qty": 2400,
+      "sku": "MAS-CMU-8",
+      "name": "CMU Wall, 8in, Reinforced & Grouted",
+      "brand": "Bronx Masonry",
+      "category": "Masonry",
+      "unit_cost": 24.5,
+      "list_price": 41.0,
+      "discount": 0.3,
+      "net_price": 28.7,
+      "extended": 68880.0,
+      "margin": 0.1463,
+      "resolve_tier": "student",
+      "confidence": 0.758,
+      "escalated": false,
+      "rationale": "High-confidence hybrid match \u2014 MiniLM embedding + spec signals (conf 0.76, lead 0.84 over runner-up).",
+      "on_hand": 21200,
+      "warehouse": "Islandia HQ Yard (1770 Motor Pkwy)",
+      "lead_time_days": 7,
+      "status": "active",
+      "uom": "sf",
+      "mwbe": "MBE",
+      "substituted": false,
+      "orig_sku": null,
+      "orig_name": null,
+      "price_delta": 0.0,
+      "latency_ms": 34.43,
+      "cost_usd": 0.0,
+      "flags": []
+    },
+    {
+      "raw": "10x FR-20 fire-rated door assemblies",
+      "qty": 10,
+      "sku": "DOR-FR-22",
+      "name": "Fire-Rated Door Assembly, Model FR-22 (90 min)",
+      "brand": "Guardian Openings",
+      "category": "Doors & Glazing",
+      "unit_cost": 1920,
+      "list_price": 3250,
+      "discount": 0.3,
+      "net_price": 2275.0,
+      "extended": 22750.0,
+      "margin": 0.156,
+      "resolve_tier": "student",
+      "confidence": 0.719,
+      "escalated": false,
+      "rationale": "High-confidence hybrid match \u2014 MiniLM embedding + spec signals (conf 0.72, lead 0.57 over runner-up).",
+      "on_hand": 40,
+      "warehouse": "Holbrook Warehouse (926 Lincoln Ave)",
+      "lead_time_days": 5,
+      "status": "active",
+      "uom": "each",
+      "mwbe": "",
+      "substituted": true,
+      "orig_sku": "DOR-FR-20",
+      "orig_name": "Fire-Rated Door Assembly, Model FR-20 (90 min)",
+      "price_delta": 0.0484,
+      "latency_ms": 30.34,
+      "cost_usd": 0.0,
+      "flags": [
+        "substituted:discontinued"
+      ]
+    },
+    {
+      "raw": "1800 sf aluminum curtain wall, unitized",
+      "qty": 1800,
+      "sku": "GLZ-CW-ALU",
+      "name": "Aluminum Curtain Wall, Thermally Broken",
+      "brand": "Guardian Openings",
+      "category": "Doors & Glazing",
+      "unit_cost": 118,
+      "list_price": 196,
+      "discount": 0.3,
+      "net_price": 137.2,
+      "extended": 246960.0,
+      "margin": 0.1399,
+      "resolve_tier": "student",
+      "confidence": 0.694,
+      "escalated": false,
+      "rationale": "High-confidence hybrid match \u2014 MiniLM embedding + spec signals (conf 0.69, lead 0.72 over runner-up).",
+      "on_hand": 7000,
+      "warehouse": "Islandia HQ Yard (1770 Motor Pkwy)",
+      "lead_time_days": 7,
+      "status": "active",
+      "uom": "sf",
+      "mwbe": "",
+      "substituted": false,
+      "orig_sku": null,
+      "orig_name": null,
+      "price_delta": 0.0,
+      "latency_ms": 35.16,
+      "cost_usd": 0.0,
+      "flags": []
+    }
+  ],
+  "subtotal": 338590.0,
+  "blended_margin": 0.1423,
+  "mwbe_share": 0.2034,
+  "decision": "escalate",
+  "verdict": {
+    "decision": "escalate",
+    "blocked_by": [
+      "margin_floor"
+    ],
+    "summary": "Held for the chief estimator: Bid blended margin 14.2% is below the 15% floor; needs the chief estimator's sign-off.",
+    "results": [
+      {
+        "id": "catalog_validity",
+        "label": "Scope validity",
+        "status": "pass",
+        "detail": "Every line resolves to a real, active cost-library assembly.",
+        "evidence": ""
+      },
+      {
+        "id": "substitution_policy",
+        "label": "Alternates policy",
+        "status": "pass",
+        "detail": "1 alternate(s), all within the 20% rate tolerance.",
+        "evidence": "DOR-FR-20->DOR-FR-22"
+      },
+      {
+        "id": "line_floor",
+        "label": "Per-line margin floor",
+        "status": "pass",
+        "detail": "All lines clear the 8% hard floor.",
+        "evidence": ""
+      },
+      {
+        "id": "margin_floor",
+        "label": "Blended margin floor",
+        "status": "block",
+        "detail": "Bid blended margin 14.2% is below the 15% floor; needs the chief estimator's sign-off.",
+        "evidence": "blended 14.2% vs floor 15%"
+      },
+      {
+        "id": "credit_hold",
+        "label": "Owner standing",
+        "status": "pass",
+        "detail": "Owner is clear to bid \u2014 prequalification and bonding in good standing.",
+        "evidence": ""
+      },
+      {
+        "id": "mwbe_goal",
+        "label": "M/WBE participation",
+        "status": "warn",
+        "detail": "Certified-vendor share 20% is below the 30% goal; re-balance subs before submission.",
+        "evidence": "certified 20% vs goal 30%"
+      }
+    ]
+  },
+  "routing": {
+    "student": 3,
+    "teacher": 0,
+    "memory": 0,
+    "cheap_tier_pct": 100,
+    "identify_cost_usd": 0.0
+  },
+  "follow_up_email": "To: m.lee@nycsca.example\nSubject: Re: PS 118 addition \u00b7 masonry, doors, curtain wall \u00b7 Estimate EST-3102\n\nHi Marcus Lee,\n\nThank you for the solicitation. We're preparing estimate EST-3102. One item needs a quick check on our side and your Forte project executive will follow up shortly.\n\n  \u2022 2,400 sf \u00d7 CMU Wall, 8in, Reinforced & Grouted [MAS-CMU-8] at $28.70 = $68,880.00\n  \u2022 10 each \u00d7 Fire-Rated Door Assembly, Model FR-22 (90 min) [DOR-FR-22] at $2,275.00 = $22,750.00  (alternate for Fire-Rated Door Assembly, Model FR-20 (90 min); DOR-FR-20 unavailable)\n  \u2022 1,800 sf \u00d7 Aluminum Curtain Wall, Thermally Broken [GLZ-CW-ALU] at $137.20 = $246,960.00\n\nSubtotal: $338,590.00 (Net 45 \u00b7 5% retainage)\n\nReply here to release the estimate into the design-build cost model and we'll confirm the schedule.\n\nForte AI \u00b7 Bid Desk\nForte Construction Corp. \u00b7 1770 Motor Parkway, Islandia, NY",
+  "execution": {
+    "ref": "EST-3102",
+    "status": "held",
+    "reason": "Held for the chief estimator: Bid blended margin 14.2% is below the 15% floor; needs the chief estimator's sign-off."
+  }
+}
