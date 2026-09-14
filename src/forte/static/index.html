@@ -211,15 +211,15 @@
   .empty{text-align:center;color:var(--muted);padding:34px 18px;border:1px dashed var(--line);border-radius:var(--r3)}
   .empty .eh{font-weight:600;color:var(--ink);font-size:14px;margin-bottom:4px}
   /* ---------- AI drawer ---------- */
-  .ai{position:fixed;top:0;right:0;width:440px;max-width:94vw;height:100vh;background:var(--panel);
+  .aidrawer{position:fixed;top:0;right:0;width:440px;max-width:94vw;height:100vh;background:var(--panel);
     border-left:1px solid var(--line);box-shadow:-10px 0 34px rgba(16,24,40,.10);transform:translateX(100%);
     transition:.22s cubic-bezier(.4,0,.2,1);z-index:24;display:flex;flex-direction:column}
-  .ai.open{transform:none}
-  .ai .h{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid var(--line);background:linear-gradient(120deg,var(--aibg),#fff)}
-  .ai .h b{color:var(--ai2)} .ai .h .x{margin-left:auto;cursor:pointer;color:var(--muted);font-size:18px}
-  .ai .body{flex:1;overflow:auto;padding:14px 16px}
-  .ai .starter{display:flex;gap:8px;margin-bottom:10px}
-  .ai textarea{flex:1;min-height:44px;padding:10px 11px;border:1px solid var(--line);border-radius:9px;resize:vertical}
+  .aidrawer.open{transform:none}
+  .aidrawer .h{display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid var(--line);background:linear-gradient(120deg,var(--aibg),#fff)}
+  .aidrawer .h b{color:var(--ai2)} .aidrawer .h .x{margin-left:auto;cursor:pointer;color:var(--muted);font-size:18px}
+  .aidrawer .body{flex:1;overflow:auto;padding:14px 16px}
+  .aidrawer .starter{display:flex;gap:8px;margin-bottom:10px}
+  .aidrawer textarea{flex:1;min-height:44px;padding:10px 11px;border:1px solid var(--line);border-radius:9px;resize:vertical}
   .answer{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:14px;margin:8px 0}
   .fcard{border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-bottom:10px}
   .fcard .ft{font-size:11px;font-weight:600;color:var(--ai2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;display:flex;align-items:center;gap:5px}
@@ -389,7 +389,7 @@
   </div>
 </div>
 
-<div class="ai" id="ai">
+<div class="aidrawer" id="ai">
   <div class="h"><span class="aidiamond">◆</span> <b>Forte AI</b><span class="muted" id="aiCtx"></span><span class="x" onclick="closeAI()">×</span></div>
   <div class="body" id="aiBody"></div>
 </div>
