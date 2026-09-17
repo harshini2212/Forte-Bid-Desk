@@ -553,13 +553,11 @@ const PAGES={
   connectors:{title:'Connectors',sub:'The systems the agent plugs into',render:pgConnectors},
   catalog:{title:'Cost Library',sub:'Assemblies, schedule rates & availability',render:pgCatalog},
   runs:{title:'Runs',sub:'Everything the agent executed this session',render:pgRuns},
-  creator:{title:'Creator',sub:'The engineer behind the Bid Desk',render:pgCreator},
 };
 const NAVGROUPS=[
   ['Overview',[['home','Home','home'],['desk','Bid Desk','bill'],['ask','Forte AI','bolt']]],
   ['Intelligence',[['routing','Model Routing','trend'],['brain','Playbook','book']]],
   ['Systems',[['connectors','Connectors','layers'],['catalog','Cost Library','box'],['runs','Runs','tasks']]],
-  ['About',[['creator','Creator','people']]],
 ];
 const ROLE_INIT={precon:'PE',chief:'CE',px:'PX'};
 
@@ -1003,28 +1001,7 @@ async function pgRuns(){
     ],r,{file:'runs',sort:{key:'ts',dir:'desc'}}):'<div class="empty"><div class="eh">No runs yet</div>Run a solicitation from the Bid Desk or ask Forte AI a question.</div>');
 }
 
-// ---------- Creator ----------
-function pgCreator(){
-  const links=[['Portfolio','https://harshinivijay.com'],['LinkedIn','https://www.linkedin.com/in/harshini-vijayakumar/'],['GitHub','https://github.com/harshini2212'],['Devpost','https://devpost.com/hv2201'],['X / Twitter','https://x.com/highnoon212'],['Email','mailto:hv2201@nyu.edu']]
-    .map(([l,u])=>`<a href="${u}" target="_blank" rel="noopener" class="chip" style="text-decoration:none">${esc(l)} ↗</a>`).join('');
-  const chips=items=>items.map(s=>`<span class="tag" style="display:inline-block;margin:2px">${esc(s)}</span>`).join('');
-  view().innerHTML=`<div class="row g2" style="grid-template-columns:300px 1fr;align-items:start">
-    <div class="card" style="text-align:center">
-      <div style="width:124px;height:124px;margin:8px auto 14px"><img src="https://harshinivijay.com/images/about.jpg" alt="Harshini Vijaya Kumar" referrerpolicy="no-referrer" style="width:124px;height:124px;border-radius:50%;object-fit:cover;box-shadow:var(--sh2)" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
-        <div style="display:none;width:124px;height:124px;border-radius:50%;background:var(--peach);color:#5b2b12;align-items:center;justify-content:center;font-size:40px;font-weight:700;letter-spacing:-1px">HV</div></div>
-      <div style="font-size:19px;font-weight:700;letter-spacing:-.4px">Harshini Vijaya Kumar</div>
-      <div class="muted" style="font-size:12.5px;margin-top:3px">AI / ML Engineer · Researcher · 5× Hackathon Winner</div>
-      <div class="chips" style="justify-content:center;margin-top:15px">${links}</div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:16px">
-      <div class="card"><div class="ch"><h3>About</h3></div><div style="font-size:13.5px;line-height:1.65;color:var(--ink2)">MS Computer Engineering at NYU, focused on large language models, agentic systems, and production-grade architecture. I'm a 3-time Model UN Best Delegate winner with two honorable mentions, and I love fast-paced, high-ownership environments. I'm drawn to problems where an AI has to <i>act</i>, not just answer, which is exactly what this project explores: autonomous estimating where a wrong submission can't ship, so every step clears a guardrail before it executes.</div></div>
-      <div class="card"><div class="ch"><h3>Skills</h3></div>
-        <h2 style="margin:0 0 7px">AI / ML</h2><div style="margin-bottom:13px">${chips(['LLMs','Agents & tool-use','Model distillation','LoRA fine-tuning','RAG','NLP','MLOps'])}</div>
-        <h2 style="margin:0 0 7px">Languages</h2><div style="margin-bottom:13px">${chips(['Python','JavaScript','TypeScript','React','Node.js','Java','C++'])}</div>
-        <h2 style="margin:0 0 7px">Data &amp; Infrastructure</h2><div>${chips(['Kubernetes','Docker','PostgreSQL','BigQuery','Kafka','AWS','FastAPI','TensorFlow','PyTorch'])}</div></div>
-      <div class="card"><div class="ch"><h3>Why I built this for Forte</h3><span class="sp"></span><span class="muted" style="font-size:12px">what motivated me</span></div><div style="font-size:12.5px;line-height:1.65;color:var(--ink2)">Forte modernizes the transit stations and public buildings New York runs on, and precon is where every one of those projects starts. The Bid Desk is an AI teammate for that desk: it reads a messy solicitation, resolves the scope to the cost library, prices to the owner's schedule, and clears its guardrails — margin floors, owner standing, M/WBE goals — before it submits, so it executes real estimating work without ever shipping a wrong number.</div></div>
-    </div></div>`;
-}
+
 
 // ---------- AI assistant drawer ----------
 function openAI(){ el('aiCtx').textContent='· '+(PAGES[STATE.page]?.title||''); el('ai').classList.add('open');
