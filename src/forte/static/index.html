@@ -668,6 +668,7 @@ async function pgHome(){
   const floor=d.policies.margin_floor, mdelta=q.n?(q.avg_margin-floor)/floor:null;
   const recent=d.recent||[], margins=recent.map(x=>x.blended_margin);
   view().innerHTML=`
+    <p class="lede" style="max-width:980px;margin-bottom:16px"><b>Forte Bid Desk</b> is an AI estimator for Forte Construction Corp. that reads each owner's bid solicitation, resolves the scope to Forte's cost library, prices it to the owner's rate schedule, and submits the estimate on its own once it clears the guardrails, or escalates it to the chief estimator with the reason. Forte bids on transit, ADA and public-facility work where every solicitation carries margin floors, prequalification standing and M/WBE goals, so this desk turns precon's slowest step into a safe, auditable action instead of a manual one.</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px">
       <span class="pill" onclick="runNext()">${ic('play')} Run next bid</span>
       <span class="pill" onclick="openPage('desk')">${ic('bill')} Open Bid Desk</span>
